@@ -45,17 +45,10 @@ export function TripExportButton({ itinerary }: TripExportButtonProps) {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
     <div className="flex gap-2">
-      <Button variant="secondary" size="sm" onClick={handleCopy} className="flex-1">
+      <Button variant="secondary" size="sm" onClick={handleCopy} className="w-full">
         {copied ? "Copied! ✓" : "📋 Copy Summary"}
-      </Button>
-      <Button variant="secondary" size="sm" onClick={handlePrint} className="flex-1">
-        🖨️ Print
       </Button>
     </div>
   );

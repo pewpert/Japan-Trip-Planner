@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { TripSettings, CostBreakdown, SavedItinerary } from "@/types/trip";
+import type { TripSettings, CostBreakdown, SavedItinerary, ItineraryDay } from "@/types/trip";
 import type { RouteResult, POI, SuggestedBreak, BikerPOI } from "@/types/route";
 import type { WeatherPoint } from "@/types/weather";
 
@@ -66,6 +66,12 @@ interface TripStore {
   toggleBikerCategory: (type: string) => void;
   selectedBikerPOI: BikerPOI | null;
   setSelectedBikerPOI: (poi: BikerPOI | null) => void;
+
+  // AI Itinerary (persisted)
+  itinerary: ItineraryDay[] | null;
+  setItinerary: (itinerary: ItineraryDay[] | null) => void;
+  activeDay: number; // 1-based
+  setActiveDay: (day: number) => void;
 }
 
 const defaultSettings: TripSettings = {
@@ -98,6 +104,8 @@ export const useTripStore = create<TripStore>()(
       savedItineraries: [],
       activeBikerCategories: ["biker-cafe", "famous-road", "michi-no-eki", "bike-rental", "scenic", "accommodation"],
       selectedBikerPOI: null,
+      itinerary: null,
+      activeDay: 1,
 
       setOrigin: (origin) => set({ origin }),
       setDestination: (destination) => set({ destination }),
@@ -185,6 +193,8 @@ export const useTripStore = create<TripStore>()(
           destinationCoords: null,
           waypointCoords: [],
           suggestedBreaks: [],
+          // Note: itinerary is intentionally NOT cleared here —
+          // users keep their itinerary after clearing a manual route.
         }),
 
       toggleBikerCategory: (type) => set((state) => ({
@@ -193,6 +203,9 @@ export const useTripStore = create<TripStore>()(
           : [...state.activeBikerCategories, type]
       })),
       setSelectedBikerPOI: (selectedBikerPOI) => set({ selectedBikerPOI }),
+
+      setItinerary: (itinerary) => set({ itinerary, activeDay: 1 }),
+      setActiveDay: (activeDay) => set({ activeDay }),
     }),
     {
       name: "japan-bike-trip-planner-store",
@@ -201,6 +214,7 @@ export const useTripStore = create<TripStore>()(
         savedItineraries: state.savedItineraries,
         isDarkMode: state.isDarkMode,
         activeBikerCategories: state.activeBikerCategories,
+        itinerary: state.itinerary,
       }),
     }
   )

@@ -6,9 +6,11 @@ import { useTripStore } from "@/hooks/useTripStore";
 import { PlaceAutocompleteInput } from "@/components/ui/PlaceAutocompleteInput";
 import { Button } from "@/components/ui/Button";
 import { planRoute } from "@/lib/routeApi";
+import { DayView } from "./DayView";
 
 export function RouteInputs() {
   const {
+    itinerary,
     origin, destination, waypoints,
     setOrigin, setDestination, addWaypoint, removeWaypoint,
     setOriginCoords, setDestinationCoords, setWaypointCoords,
@@ -83,6 +85,10 @@ export function RouteInputs() {
     dragIndex.current = null;
     setDragOverIndex(null);
   };
+
+  if (itinerary) {
+    return <DayView />;
+  }
 
   return (
     <div className="flex flex-col gap-3">

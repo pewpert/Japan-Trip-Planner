@@ -8,9 +8,10 @@ import { CostEstimator } from "./CostEstimator";
 import { TripSettings } from "./TripSettings";
 import { ItineraryPlanner } from "./ItineraryPlanner";
 import { RouteOverviewPanel } from "./RouteOverviewPanel";
+import { SummaryTab } from "./SummaryTab";
 import { Card } from "@/components/ui/Card";
 
-type Tab = "route" | "itinerary";
+type Tab = "route" | "itinerary" | "summary";
 
 export function PlannerSidebar() {
   const { isSidebarOpen, toggleSidebar, route, isDarkMode, toggleDarkMode } = useTripStore();
@@ -69,6 +70,16 @@ export function PlannerSidebar() {
             >
               Itinerary
             </button>
+            <button
+              onClick={() => setActiveTab("summary")}
+              className={`flex-1 pb-2.5 text-sm font-medium transition-colors border-b-2 -mb-px
+                ${activeTab === "summary"
+                  ? "border-red-600 text-red-600"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                }`}
+            >
+              Summary
+            </button>
           </div>
 
           {/* Route tab content */}
@@ -110,6 +121,11 @@ export function PlannerSidebar() {
           {/* Itinerary tab content */}
           {activeTab === "itinerary" && (
             <ItineraryPlanner onSwitchToRoute={() => setActiveTab("route")} />
+          )}
+
+          {/* Summary tab content */}
+          {activeTab === "summary" && (
+            <SummaryTab />
           )}
         </div>
       </div>

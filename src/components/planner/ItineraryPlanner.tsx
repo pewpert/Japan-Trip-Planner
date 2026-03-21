@@ -86,7 +86,7 @@ interface ItineraryPlannerProps {
 }
 
 export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
-  const { settings, updateSettings, setOrigin, setDestination } = useTripStore();
+  const { settings, updateSettings, setOrigin, setDestination, itinerary, setItinerary } = useTripStore();
 
   // Use string state so the field can be fully cleared before typing a new number
   const [days, setDays] = useState<string>("3");
@@ -97,7 +97,6 @@ export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
   const [regionsToAvoid, setRegionsToAvoid] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
 
-  const [itinerary, setItinerary] = useState<ItineraryDay[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedScheduleDays, setExpandedScheduleDays] = useState<Set<number>>(new Set());
