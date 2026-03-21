@@ -12,7 +12,12 @@ const DIFFICULTY_STYLES = {
   advanced: { dot: "bg-red-400", label: "Advanced" },
 };
 
-export function SeedRouteCards() {
+interface SeedRouteCardsProps {
+  routes?: SeedRoute[];
+  desktopClassName?: string;
+}
+
+export function SeedRouteCards({ routes = SEED_ROUTES, desktopClassName = "top-4 left-4" }: SeedRouteCardsProps) {
   const {
     setOrigin,
     setDestination,
@@ -62,8 +67,8 @@ export function SeedRouteCards() {
   return (
     <>
       {/* Desktop: 2×2 grid top-left */}
-      <div className="absolute top-4 left-4 hidden md:grid grid-cols-2 gap-3 max-w-sm z-10">
-        {SEED_ROUTES.map((seed) => (
+      <div className={`absolute ${desktopClassName} hidden md:grid grid-cols-2 gap-3 max-w-sm z-10`}>
+        {routes.map((seed) => (
           <SeedCard
             key={seed.id}
             seed={seed}
@@ -76,7 +81,7 @@ export function SeedRouteCards() {
 
       {/* Mobile: horizontal scroll row at bottom */}
       <div className="absolute bottom-16 left-0 right-0 flex gap-3 overflow-x-auto px-4 snap-x snap-mandatory z-10 md:hidden pb-1">
-        {SEED_ROUTES.map((seed) => (
+        {routes.map((seed) => (
           <div key={seed.id} className="shrink-0 w-56 snap-start">
             <SeedCard
               seed={seed}

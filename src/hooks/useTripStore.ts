@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { TripSettings, CostBreakdown, SavedItinerary } from "@/types/trip";
-import type { RouteResult, POI, SuggestedBreak } from "@/types/route";
+import type { RouteResult, POI, SuggestedBreak, BikerPOI } from "@/types/route";
 import type { WeatherPoint } from "@/types/weather";
 
 interface TripStore {
@@ -60,6 +60,12 @@ interface TripStore {
   saveItinerary: (name: string, notes: string) => void;
   deleteItinerary: (id: string) => void;
   clearRoute: () => void;
+
+  // Biker POI layer
+  activeBikerCategories: string[];
+  toggleBikerCategory: (type: string) => void;
+  selectedBikerPOI: BikerPOI | null;
+  setSelectedBikerPOI: (poi: BikerPOI | null) => void;
 }
 
 const defaultSettings: TripSettings = {
@@ -90,6 +96,8 @@ export const useTripStore = create<TripStore>()(
       suggestedBreaks: [],
       settings: defaultSettings,
       savedItineraries: [],
+      activeBikerCategories: ["biker-cafe", "famous-road", "michi-no-eki", "bike-rental", "scenic", "accommodation"],
+      selectedBikerPOI: null,
 
       setOrigin: (origin) => set({ origin }),
       setDestination: (destination) => set({ destination }),
@@ -178,6 +186,13 @@ export const useTripStore = create<TripStore>()(
           waypointCoords: [],
           suggestedBreaks: [],
         }),
+
+      toggleBikerCategory: (type) => set((state) => ({
+        activeBikerCategories: state.activeBikerCategories.includes(type)
+          ? state.activeBikerCategories.filter(c => c !== type)
+          : [...state.activeBikerCategories, type]
+      })),
+      setSelectedBikerPOI: (selectedBikerPOI) => set({ selectedBikerPOI }),
     }),
     {
       name: "japan-bike-trip-planner-store",
@@ -185,6 +200,7 @@ export const useTripStore = create<TripStore>()(
         settings: state.settings,
         savedItineraries: state.savedItineraries,
         isDarkMode: state.isDarkMode,
+        activeBikerCategories: state.activeBikerCategories,
       }),
     }
   )

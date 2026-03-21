@@ -4,7 +4,10 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { GoogleMap, useJsApiLoader, DirectionsRenderer, Marker } from "@react-google-maps/api";
 import { useTripStore } from "@/hooks/useTripStore";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { SeedRouteCards } from "@/components/map/SeedRouteCards";
+import { EmptyStatePanel } from "@/components/map/EmptyStatePanel";
+import { BikerPOILayer } from "@/components/map/BikerPOILayer";
+import { BikerPOIInfoPanel } from "@/components/map/BikerPOIInfoPanel";
+import { POILayerToggle } from "@/components/map/POILayerToggle";
 import type { POI } from "@/types/route";
 
 const JAPAN_CENTER = { lat: 36.5, lng: 137.0 };
@@ -51,7 +54,7 @@ export function TripMap() {
   });
 
   const mapRef = useRef<google.maps.Map | null>(null);
-  const { route, pois, suggestedBreaks, isLoadingRoute, origin, destination, waypoints, isDarkMode } = useTripStore();
+  const { route, pois, suggestedBreaks, isLoadingRoute, origin, destination, waypoints, isDarkMode, setSelectedBikerPOI } = useTripStore();
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
@@ -118,6 +121,7 @@ export function TripMap() {
         center={JAPAN_CENTER}
         zoom={DEFAULT_ZOOM}
         onLoad={onMapLoad}
+        onClick={() => setSelectedBikerPOI(null)}
         options={{
           disableDefaultUI: false,
           zoomControl: true,
@@ -175,7 +179,15 @@ export function TripMap() {
             }}
           />
         ))}
+
+        {/* Biker POI markers */}
+        <BikerPOILayer />
       </GoogleMap>
+
+      {/* Biker POI info panel */}
+      <BikerPOIInfoPanel />
+      {/* POI layer toggles */}
+      <POILayerToggle />
 
       {/* Loading overlay */}
       {isLoadingRoute && (
@@ -184,8 +196,8 @@ export function TripMap() {
         </div>
       )}
 
-      {/* Seed route cards — shown in empty state */}
-      {!route && !isLoadingRoute && <SeedRouteCards />}
+      {/* Empty state — shown when no route is loaded */}
+      {!route && !isLoadingRoute && <EmptyStatePanel />}
     </div>
   );
 }
