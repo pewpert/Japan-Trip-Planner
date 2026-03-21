@@ -5,7 +5,7 @@ import "./globals.css";
 const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Japan Moto Planner",
+  title: "Japan バイク Trip Planner",
   description: "Plan your motorcycle trip through rural Japan",
   icons: { icon: "/favicon.ico" },
 };
@@ -27,7 +27,7 @@ export default function RootLayout({
         {/* Apply saved dark mode preference before first paint to prevent flash */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var d=localStorage.getItem('japan-trip-dark-mode');if(d==='true')document.documentElement.classList.add('dark');}catch(e){}})();`,
+            __html: `(function(){try{var d=localStorage.getItem('japan-bike-trip-dark-mode');if(d==='true')document.documentElement.classList.add('dark');}catch(e){}})();`,
           }}
         />
       </head>

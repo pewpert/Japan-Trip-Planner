@@ -33,8 +33,8 @@ export function PlannerSidebar() {
               <Bike className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-base font-bold text-gray-900 dark:text-white">Japan Moto Planner</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Discover rural Japan by motorcycle</p>
+              <h1 className="text-base font-bold text-gray-900 dark:text-white">Japan バイク Trip Planner</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Discover rural Japan by bike</p>
             </div>
             {/* Dark mode toggle */}
             <button

@@ -119,7 +119,7 @@ export const useTripStore = create<TripStore>()(
         set((state) => {
           const next = !state.isDarkMode;
           try {
-            localStorage.setItem("japan-trip-dark-mode", String(next));
+            localStorage.setItem("japan-bike-trip-dark-mode", String(next));
           } catch {}
           if (next) {
             document.documentElement.classList.add("dark");
@@ -180,7 +180,7 @@ export const useTripStore = create<TripStore>()(
         }),
     }),
     {
-      name: "japan-trip-planner-store",
+      name: "japan-bike-trip-planner-store",
       partialize: (state) => ({
         settings: state.settings,
         savedItineraries: state.savedItineraries,
