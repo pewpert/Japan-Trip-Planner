@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { SEED_ROUTES, type SeedRoute } from "@/data/seedRoutes";
+import { SEED_ITINERARIES } from "@/data/seedItineraries";
 import { useTripStore } from "@/hooks/useTripStore";
 import { planRoute } from "@/lib/routeApi";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -27,6 +28,7 @@ export function SeedRouteCards({ routes = SEED_ROUTES, desktopClassName = "top-4
     setCostBreakdown,
     setSuggestedBreaks,
     setLoadingRoute,
+    setItinerary,
     settings,
   } = useTripStore();
 
@@ -53,6 +55,9 @@ export function SeedRouteCards({ routes = SEED_ROUTES, desktopClassName = "top-4
         setRoute(route);
         setCostBreakdown(cost);
         setSuggestedBreaks(breaks);
+        // Load the static seed itinerary so Summary tab is immediately populated
+        const seedItinerary = SEED_ITINERARIES[seed.id];
+        if (seedItinerary) setItinerary(seedItinerary);
       },
       onError: (msg) => {
         console.error("[SeedRouteCards]", msg);

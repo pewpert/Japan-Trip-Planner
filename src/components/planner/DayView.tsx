@@ -22,12 +22,12 @@ export function DayView() {
     isLoadingRoute,
   } = useTripStore();
 
-  if (!itinerary || itinerary.length === 0) return null;
+  // Derive these before the early return so hooks are never called conditionally
+  const day = itinerary?.find((d) => d.day === activeDay) ?? itinerary?.[0] ?? null;
+  const totalDays = itinerary?.length ?? 0;
 
-  const day = itinerary.find((d) => d.day === activeDay) ?? itinerary[0];
-  const totalDays = itinerary.length;
-
-  // Auto-load this day's route into the map whenever activeDay changes
+  // Auto-load this day's route into the map whenever activeDay changes.
+  // Must be above the early return to satisfy Rules of Hooks.
   useEffect(() => {
     if (!day) return;
     setOrigin(day.startLocation);
@@ -36,7 +36,7 @@ export function DayView() {
     planRoute({
       origin: day.startLocation,
       destination: day.endLocation,
-      waypoints: [],
+      waypoints: day.keyStops ?? [],
       settings,
       onStart: () => setLoadingRoute(true),
       onSuccess: (route, cost, breaks) => {
@@ -47,7 +47,9 @@ export function DayView() {
       onError: () => {},
       onFinally: () => setLoadingRoute(false),
     });
-  }, [activeDay]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeDay]); // eslint-disable-line react-hooks/exhaustive-deps — intentionally fires on day change only
+
+  if (!itinerary || itinerary.length === 0 || !day) return null;
 
   const goToPrev = () => { if (activeDay > 1) setActiveDay(activeDay - 1); };
   const goToNext = () => { if (activeDay < totalDays) setActiveDay(activeDay + 1); };
