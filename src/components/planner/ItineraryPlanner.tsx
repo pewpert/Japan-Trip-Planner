@@ -100,6 +100,19 @@ export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
   const [itinerary, setItinerary] = useState<ItineraryDay[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [expandedScheduleDays, setExpandedScheduleDays] = useState<Set<number>>(new Set());
+
+  const toggleSchedule = (dayNumber: number) => {
+    setExpandedScheduleDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(dayNumber)) {
+        next.delete(dayNumber);
+      } else {
+        next.add(dayNumber);
+      }
+      return next;
+    });
+  };
 
   const toggleRidingStyle = (style: RidingStyle) => {
     setRidingStyles((prev) =>
@@ -245,6 +258,41 @@ export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
                       <li key={i} className="text-xs text-gray-600 dark:text-gray-400">• {poi}</li>
                     ))}
                   </ul>
+                </div>
+              )}
+
+              {/* Daily Schedule */}
+              {day.schedule && day.schedule.length > 0 && (
+                <div>
+                  <button
+                    onClick={() => toggleSchedule(day.day)}
+                    className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                  >
+                    {expandedScheduleDays.has(day.day) ? "Hide schedule ▲" : "Show schedule ▼"}
+                  </button>
+                  {expandedScheduleDays.has(day.day) && (
+                    <div className="mt-2 flex flex-col">
+                      {day.schedule.map((entry, i) => (
+                        <div key={i} className="flex gap-3">
+                          {/* Vertical line + dot connector */}
+                          <div className="flex flex-col items-center shrink-0">
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-500 mt-1 shrink-0" />
+                            {i < day.schedule!.length - 1 && (
+                              <div className="w-px flex-1 bg-gray-200 dark:bg-gray-600 my-0.5" />
+                            )}
+                          </div>
+                          <div className="flex gap-2 pb-2 min-w-0">
+                            <span className="text-xs font-mono text-gray-400 dark:text-gray-500 shrink-0 tabular-nums">
+                              {entry.time}
+                            </span>
+                            <span className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
+                              {entry.activity}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 

@@ -33,10 +33,15 @@ Return ONLY valid JSON with no markdown fences, no explanation, no extra text. T
         "parkingNote": "string — e.g. Free dedicated motorcycle parking, or Paid parking ¥500/night"
       },
       "pois": ["string — brief POI description"],
-      "seasonalWarning": "string or null — e.g. Norikura Skyline closes November to May"
+      "seasonalWarning": "string or null — e.g. Norikura Skyline closes November to May",
+      "schedule": [
+        { "time": "HH:MM", "activity": "string — brief activity description" }
+      ]
     }
   ]
-}`;
+}
+
+For each day include 6–10 schedule entries covering: morning departure, key riding segments, rest/fuel stops, lunch, afternoon riding, arrival at destination, and accommodation check-in.`;
 
 export async function POST(req: NextRequest) {
   try {

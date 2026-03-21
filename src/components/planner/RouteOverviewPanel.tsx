@@ -3,6 +3,7 @@
 import { Coffee } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
 import { formatDuration } from "@/lib/costCalc";
+import { TripExportButton } from "./TripExportButton";
 
 export function RouteOverviewPanel() {
   const { route, suggestedBreaks } = useTripStore();
@@ -62,6 +63,9 @@ export function RouteOverviewPanel() {
           ))}
         </div>
       )}
+
+      {/* Export */}
+      <TripExportButton />
     </div>
   );
 }

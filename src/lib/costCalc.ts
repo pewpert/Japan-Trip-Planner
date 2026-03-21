@@ -65,6 +65,48 @@ export function calculateTripCost(
 }
 
 /**
+ * Low/high cost range for a trip.
+ * Low: better fuel efficiency, avoiding some tolls, budget accommodation floor
+ * High: worse efficiency, more expressway use, premium accommodation ceiling
+ */
+export function calculateTripCostRange(
+  distanceKm: number,
+  durationMinutes: number,
+  settings: TripSettings
+): { low: CostBreakdown; high: CostBreakdown } {
+  const baseFuel = calculateFuelCost(distanceKm, settings);
+  const baseTolls = estimateTollCost(distanceKm, settings);
+  const baseAccommodation = estimateAccommodationCost(settings.budget);
+
+  const lowFuel = Math.round(baseFuel * 0.9);
+  const lowTolls = Math.round(baseTolls * 0.8);
+  const lowAccommodation = Math.round(baseAccommodation * 0.85);
+
+  const highFuel = Math.round(baseFuel * 1.15);
+  const highTolls = Math.round(baseTolls * 1.2);
+  const highAccommodation = Math.round(baseAccommodation * 1.2);
+
+  return {
+    low: {
+      fuel: lowFuel,
+      tolls: lowTolls,
+      accommodation: lowAccommodation,
+      total: lowFuel + lowTolls + lowAccommodation,
+      distanceKm,
+      durationMinutes,
+    },
+    high: {
+      fuel: highFuel,
+      tolls: highTolls,
+      accommodation: highAccommodation,
+      total: highFuel + highTolls + highAccommodation,
+      distanceKm,
+      durationMinutes,
+    },
+  };
+}
+
+/**
  * Format JPY amount for display (e.g. ¥12,500)
  */
 export function formatJPY(amount: number): string {

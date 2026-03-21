@@ -59,4 +59,5 @@ export interface ItineraryDay {
   accommodation: ItineraryAccommodation;
   pois: string[];
   seasonalWarning: string | null;
+  schedule?: { time: string; activity: string }[];
 }

@@ -2,32 +2,37 @@
 
 import { Fuel, CreditCard, Building2, TrendingUp } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
-import { formatJPY, formatDuration } from "@/lib/costCalc";
+import { formatJPY, formatDuration, calculateTripCostRange } from "@/lib/costCalc";
 
 export function CostEstimator() {
-  const { costBreakdown, route } = useTripStore();
+  const { costBreakdown, route, settings } = useTripStore();
 
   if (!costBreakdown || !route) return null;
+
+  const range = calculateTripCostRange(route.distanceKm, route.durationMinutes, settings);
 
   const items = [
     {
       icon: <Fuel className="w-4 h-4" />,
       label: "Fuel",
-      value: formatJPY(costBreakdown.fuel),
-      sub: `~${(route.distanceKm / useTripStore.getState().settings.fuelEfficiency).toFixed(1)}L`,
+      low: range.low.fuel,
+      high: range.high.fuel,
+      sub: `~${(route.distanceKm / settings.fuelEfficiency).toFixed(1)}L`,
       color: "text-orange-600 bg-orange-50 dark:bg-orange-900/30",
     },
     {
       icon: <CreditCard className="w-4 h-4" />,
       label: "Tolls (est.)",
-      value: formatJPY(costBreakdown.tolls),
+      low: range.low.tolls,
+      high: range.high.tolls,
       sub: "expressway approx.",
       color: "text-blue-600 bg-blue-50 dark:bg-blue-900/30",
     },
     {
       icon: <Building2 className="w-4 h-4" />,
       label: "Accommodation",
-      value: formatJPY(costBreakdown.accommodation),
+      low: range.low.accommodation,
+      high: range.high.accommodation,
       sub: "per night",
       color: "text-purple-600 bg-purple-50 dark:bg-purple-900/30",
     },
@@ -55,7 +60,9 @@ export function CostEstimator() {
                 <p className="text-xs text-gray-400 dark:text-gray-500">{item.sub}</p>
               </div>
             </div>
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">{item.value}</span>
+            <span className="text-sm font-semibold text-gray-900 dark:text-white tabular-nums">
+              {formatJPY(item.low)} – {formatJPY(item.high)}
+            </span>
           </div>
         ))}
       </div>
@@ -68,7 +75,9 @@ export function CostEstimator() {
           </div>
           <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Total (1 night)</p>
         </div>
-        <span className="text-base font-bold text-red-600">{formatJPY(costBreakdown.total)}</span>
+        <span className="text-base font-bold text-red-600 tabular-nums">
+          {formatJPY(range.low.total)} – {formatJPY(range.high.total)}
+        </span>
       </div>
 
       <p className="text-xs text-gray-400 dark:text-gray-500">
