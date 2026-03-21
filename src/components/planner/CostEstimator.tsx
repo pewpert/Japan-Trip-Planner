@@ -1,0 +1,79 @@
+"use client";
+
+import { Fuel, CreditCard, Building2, TrendingUp } from "lucide-react";
+import { useTripStore } from "@/hooks/useTripStore";
+import { formatJPY, formatDuration } from "@/lib/costCalc";
+
+export function CostEstimator() {
+  const { costBreakdown, route } = useTripStore();
+
+  if (!costBreakdown || !route) return null;
+
+  const items = [
+    {
+      icon: <Fuel className="w-4 h-4" />,
+      label: "Fuel",
+      value: formatJPY(costBreakdown.fuel),
+      sub: `~${(route.distanceKm / useTripStore.getState().settings.fuelEfficiency).toFixed(1)}L`,
+      color: "text-orange-600 bg-orange-50 dark:bg-orange-900/30",
+    },
+    {
+      icon: <CreditCard className="w-4 h-4" />,
+      label: "Tolls (est.)",
+      value: formatJPY(costBreakdown.tolls),
+      sub: "expressway approx.",
+      color: "text-blue-600 bg-blue-50 dark:bg-blue-900/30",
+    },
+    {
+      icon: <Building2 className="w-4 h-4" />,
+      label: "Accommodation",
+      value: formatJPY(costBreakdown.accommodation),
+      sub: "per night",
+      color: "text-purple-600 bg-purple-50 dark:bg-purple-900/30",
+    },
+  ];
+
+  return (
+    <div className="flex flex-col gap-3">
+      <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Cost Estimate</h2>
+
+      {/* Route summary */}
+      <div className="flex gap-3 text-sm text-gray-600 dark:text-gray-300">
+        <span className="font-medium">{route.distanceKm.toFixed(0)} km</span>
+        <span>·</span>
+        <span>{formatDuration(route.durationMinutes)}</span>
+      </div>
+
+      {/* Cost rows */}
+      <div className="flex flex-col gap-2">
+        {items.map((item) => (
+          <div key={item.label} className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className={`p-1.5 rounded-lg ${item.color}`}>{item.icon}</div>
+              <div>
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{item.label}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{item.sub}</p>
+              </div>
+            </div>
+            <span className="text-sm font-semibold text-gray-900 dark:text-white">{item.value}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Total */}
+      <div className="border-t border-gray-100 dark:border-gray-700 pt-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-lg text-red-600 bg-red-50 dark:bg-red-900/30">
+            <TrendingUp className="w-4 h-4" />
+          </div>
+          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Total (1 night)</p>
+        </div>
+        <span className="text-base font-bold text-red-600">{formatJPY(costBreakdown.total)}</span>
+      </div>
+
+      <p className="text-xs text-gray-400 dark:text-gray-500">
+        * Estimates only. Actual costs vary by route and availability.
+      </p>
+    </div>
+  );
+}
