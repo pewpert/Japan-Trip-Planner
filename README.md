@@ -1,6 +1,6 @@
 # Japan バイク Trip Planner 🏍️
 
-A motorcycle trip planning web app for exploring rural Japan. Plan routes, estimate costs, get AI-generated itineraries, and discover biker-friendly stops.
+A motorcycle trip planning web app for exploring rural Japan by motorcycle. Plan routes, estimate costs, get AI-generated itineraries, and discover biker-friendly stops.
 
 ## Features
 
