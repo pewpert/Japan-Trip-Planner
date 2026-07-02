@@ -7,6 +7,7 @@ export interface WeatherPoint {
 
 export interface WeatherCondition {
   date: string; // ISO date string
+  temp?: number; // Celsius — instantaneous reading, only set on current conditions
   tempMin: number; // Celsius
   tempMax: number; // Celsius
   precipitationMm: number;
