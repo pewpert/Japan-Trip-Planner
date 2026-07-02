@@ -71,6 +71,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Additional comments must be under 1000 characters" }, { status: 400 });
     }
 
+    // -------------------------------------------------------------------------
+    // MOCK MODE — set ANTHROPIC_MOCK=true in .env.local to skip API calls
+    // (checked before the API key so mock mode works without a live key)
+    // Remove this block (and the flag) when credits are available
+    // -------------------------------------------------------------------------
+    if (process.env.ANTHROPIC_MOCK === "true") {
+      const mockItinerary: ItineraryDay[] = Array.from({ length: days }, (_, i) => ({
+        day: i + 1,
+        title: `Day ${i + 1} — Sample Riding Day (Mock)`,
+        startLocation: i === 0 ? "Matsumoto, Nagano" : `Town ${i}`,
+        endLocation: i === days - 1 ? "Kanazawa, Ishikawa" : `Town ${i + 1}`,
+        distanceKm: 120 + i * 20,
+        ridingTimeMinutes: 180 + i * 15,
+        keyStops: ["Norikura Skyline", "Takayama Old Town", "Shirakawa-go"],
+        accommodation: {
+          name: "Hida Takayama Guesthouse",
+          type: "guesthouse",
+          hasMotorcycleParking: true,
+          parkingNote: "Free dedicated motorcycle parking in rear lot",
+        },
+        pois: ["Norikura Skyline — famous mountain road", "Shirakawa-go — UNESCO village"],
+        seasonalWarning: i === 0 ? "Norikura Skyline closes November to May" : null,
+        schedule: [
+          { time: "08:00", activity: "Depart — fuel up at local stand" },
+          { time: "09:30", activity: "Ride Norikura Skyline — 2,700m summit road" },
+          { time: "11:00", activity: "Coffee stop at Michi-no-Eki Norikura" },
+          { time: "12:30", activity: "Lunch in Takayama old town — local ramen" },
+          { time: "14:00", activity: "Explore Sanmachi Suji historic streets" },
+          { time: "16:00", activity: "Ride to Shirakawa-go via Hida route" },
+          { time: "17:30", activity: "Arrive accommodation — check in" },
+          { time: "19:00", activity: "Dinner at guesthouse or local izakaya" },
+        ],
+      }));
+      return NextResponse.json({ itinerary: mockItinerary });
+    }
+    // -------------------------------------------------------------------------
+
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: "Anthropic API key not configured" }, { status: 500 });
@@ -115,47 +152,12 @@ Always avoid major city centers (Tokyo, Osaka, Kyoto) unless they are unavoidabl
 Choose routes that reward motorcycle riding — twisty mountain roads, scenic coastal stretches, and quiet rural roads.
 Start from a practical gateway city that has good transport links (shinkansen or airport) for arriving foreign visitors.${commentsSection}${poisContext}`;
 
-    // -------------------------------------------------------------------------
-    // MOCK MODE — set ANTHROPIC_MOCK=true in .env.local to skip API calls
-    // Remove this block (and the flag) when credits are available
-    // -------------------------------------------------------------------------
-    if (process.env.ANTHROPIC_MOCK === "true") {
-      const mockItinerary: ItineraryDay[] = Array.from({ length: days }, (_, i) => ({
-        day: i + 1,
-        title: `Day ${i + 1} — Sample Riding Day (Mock)`,
-        startLocation: i === 0 ? "Matsumoto, Nagano" : `Town ${i}`,
-        endLocation: i === days - 1 ? "Kanazawa, Ishikawa" : `Town ${i + 1}`,
-        distanceKm: 120 + i * 20,
-        ridingTimeMinutes: 180 + i * 15,
-        keyStops: ["Norikura Skyline", "Takayama Old Town", "Shirakawa-go"],
-        accommodation: {
-          name: "Hida Takayama Guesthouse",
-          type: "guesthouse",
-          hasMotorcycleParking: true,
-          parkingNote: "Free dedicated motorcycle parking in rear lot",
-        },
-        pois: ["Norikura Skyline — famous mountain road", "Shirakawa-go — UNESCO village"],
-        seasonalWarning: i === 0 ? "Norikura Skyline closes November to May" : null,
-        schedule: [
-          { time: "08:00", activity: "Depart — fuel up at local stand" },
-          { time: "09:30", activity: "Ride Norikura Skyline — 2,700m summit road" },
-          { time: "11:00", activity: "Coffee stop at Michi-no-Eki Norikura" },
-          { time: "12:30", activity: "Lunch in Takayama old town — local ramen" },
-          { time: "14:00", activity: "Explore Sanmachi Suji historic streets" },
-          { time: "16:00", activity: "Ride to Shirakawa-go via Hida route" },
-          { time: "17:30", activity: "Arrive accommodation — check in" },
-          { time: "19:00", activity: "Dinner at guesthouse or local izakaya" },
-        ],
-      }));
-      return NextResponse.json({ itinerary: mockItinerary });
-    }
-    // -------------------------------------------------------------------------
-
     const client = new Anthropic({ apiKey });
 
     const message = await client.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 4096,
+      model: "claude-sonnet-5",
+      // 8192 gives headroom for up-to-21-day itineraries without JSON truncation
+      max_tokens: 8192,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: userMessage }],
     });

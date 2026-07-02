@@ -23,7 +23,7 @@ Built by Daniel (product owner, non-technical) with Claude as architect/engineer
 | Styling | Tailwind CSS v4 | Mobile-first, no custom CSS files unless necessary |
 | Maps | Google Maps JS API via `@react-google-maps/api` | Directions, Places, Roads APIs |
 | Weather | Open-Meteo (free, no key) | Forecast along route waypoints |
-| AI | Claude API (claude-sonnet-4-6) | Route suggestions, local tips, cost estimates |
+| AI | Claude API (claude-sonnet-5) | Route suggestions, local tips, cost estimates |
 | State | Zustand | Global app state (route, trip settings) |
 | Data persistence | Browser localStorage (Phase 1), Supabase (Phase 3) |
 | HTTP client | axios | For internal API routes and external APIs |
