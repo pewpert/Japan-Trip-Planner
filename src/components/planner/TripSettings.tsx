@@ -22,7 +22,9 @@ export function TripSettings() {
   const [fuelPrice, setFuelPrice] = useState(String(settings.fuelPricePerLiter));
 
   // Keep local strings in sync if settings change externally (e.g. store rehydration)
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing local input state from the persisted store after rehydration
   useEffect(() => { setFuelEfficiency(String(settings.fuelEfficiency)); }, [settings.fuelEfficiency]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing local input state from the persisted store after rehydration
   useEffect(() => { setFuelPrice(String(settings.fuelPricePerLiter)); }, [settings.fuelPricePerLiter]);
 
   const handleFuelEfficiencyBlur = () => {

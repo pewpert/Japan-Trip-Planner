@@ -393,7 +393,7 @@ function TipsPage({ data }: { data: PrintData }) {
             <li><strong>Fuel type:</strong> Use レギュラー (Regular 90 octane) for most bikes under 400cc. ハイオク (Premium) for larger litre-class bikes — check your rental paperwork.</li>
             <li><strong>Your bike ({settings.bikeEngineCC}cc):</strong> Estimated {settings.fuelEfficiency} km/L at ¥{settings.fuelPricePerLiter}/L (regular). Fill up at Eneos, Idemitsu, or Shell stations.</li>
             <li><strong>Expressway (高速道路):</strong> Bikes {settings.bikeEngineCC >= 125 ? "125cc+" : "under 125cc"} pay {settings.bikeEngineCC >= 125 ? "standard car rates (~¥27/km)" : "reduced rates (~¥15/km)"}. ETC card is optional but convenient — get a reader from the rental shop.</li>
-            <li><strong>Michi-no-Eki (道の駅):</strong> Roadside rest stations with free parking, toilets, local food, and often free Wi-Fi. Bikers' favourite rest spots throughout Japan.</li>
+            <li><strong>Michi-no-Eki (道の駅):</strong> Roadside rest stations with free parking, toilets, local food, and often free Wi-Fi. Bikers&apos; favourite rest spots throughout Japan.</li>
           </ul>
         </div>
 

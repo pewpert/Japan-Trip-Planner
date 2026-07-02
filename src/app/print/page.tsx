@@ -20,6 +20,7 @@ export default function PrintPage() {
     try {
       const raw = sessionStorage.getItem("japan-bike-print-data");
       if (!raw) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from sessionStorage (external system, unavailable during SSR)
         setError(true);
         return;
       }
