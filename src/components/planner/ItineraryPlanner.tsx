@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Bike, MapPin, AlertTriangle, ArrowLeft, Sparkles, ParkingSquare } from "lucide-react";
+import { MapPin, ArrowLeft, Sparkles } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { formatDuration } from "@/lib/costCalc";
+import { DayDetailCard } from "./DayDetailCard";
 import type { ItineraryDay } from "@/types/trip";
 
 type RidingStyle = "mountain passes" | "coastal roads" | "rural backroads";
@@ -74,13 +74,6 @@ const SEASON_OPTIONS: { value: Season; label: string }[] = [
   { value: "winter", label: "Winter (Dec–Feb)" },
 ];
 
-const ACCOMMODATION_ICONS: Record<ItineraryDay["accommodation"]["type"], string> = {
-  hotel: "🏨",
-  ryokan: "🎎",
-  guesthouse: "🏠",
-  camping: "⛺",
-};
-
 interface ItineraryPlannerProps {
   onSwitchToRoute: () => void;
 }
@@ -99,19 +92,6 @@ export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expandedScheduleDays, setExpandedScheduleDays] = useState<Set<number>>(new Set());
-
-  const toggleSchedule = (dayNumber: number) => {
-    setExpandedScheduleDays((prev) => {
-      const next = new Set(prev);
-      if (next.has(dayNumber)) {
-        next.delete(dayNumber);
-      } else {
-        next.add(dayNumber);
-      }
-      return next;
-    });
-  };
 
   const toggleRidingStyle = (style: RidingStyle) => {
     setRidingStyles((prev) =>
@@ -188,66 +168,7 @@ export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
 
         {itinerary.map((day) => (
           <Card key={day.day} padding="md">
-            <div className="flex flex-col gap-3">
-              {/* Day header */}
-              <div className="flex items-start gap-2">
-                <div className="p-1.5 bg-red-50 dark:bg-red-900/30 rounded-lg shrink-0">
-                  <Bike className="w-4 h-4 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-red-600 uppercase tracking-wide">Day {day.day}</p>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">{day.title}</p>
-                </div>
-              </div>
-
-              {/* Distance + time badges */}
-              <div className="flex gap-2">
-                <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full font-medium">
-                  {day.distanceKm} km
-                </span>
-                <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full font-medium">
-                  {formatDuration(day.ridingTimeMinutes)} riding
-                </span>
-              </div>
-
-              {/* Seasonal warning */}
-              {day.seasonalWarning && (
-                <div className="flex items-start gap-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg px-3 py-2">
-                  <AlertTriangle className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-orange-700 dark:text-orange-400">{day.seasonalWarning}</p>
-                </div>
-              )}
-
-              {/* Key stops */}
-              {day.keyStops.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Key Stops</p>
-                  <ul className="flex flex-col gap-1">
-                    {day.keyStops.map((stop, i) => (
-                      <li key={i} className="flex items-start gap-1.5 text-xs text-gray-700 dark:text-gray-300">
-                        <MapPin className="w-3 h-3 text-red-400 shrink-0 mt-0.5" />
-                        {stop}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Accommodation */}
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 flex flex-col gap-1">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Accommodation</p>
-                <div className="flex items-start gap-2">
-                  <span className="text-base leading-none">{ACCOMMODATION_ICONS[day.accommodation.type]}</span>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{day.accommodation.name}</p>
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <ParkingSquare className={`w-3 h-3 ${day.accommodation.hasMotorcycleParking ? "text-green-600" : "text-gray-400"}`} />
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{day.accommodation.parkingNote}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
+            <DayDetailCard day={day} showSchedule showAccommodationParking>
               {/* POIs */}
               {day.pois.length > 0 && (
                 <div>
@@ -257,41 +178,6 @@ export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
                       <li key={i} className="text-xs text-gray-600 dark:text-gray-400">• {poi}</li>
                     ))}
                   </ul>
-                </div>
-              )}
-
-              {/* Daily Schedule */}
-              {day.schedule && day.schedule.length > 0 && (
-                <div>
-                  <button
-                    onClick={() => toggleSchedule(day.day)}
-                    className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-                  >
-                    {expandedScheduleDays.has(day.day) ? "Hide schedule ▲" : "Show schedule ▼"}
-                  </button>
-                  {expandedScheduleDays.has(day.day) && (
-                    <div className="mt-2 flex flex-col">
-                      {day.schedule.map((entry, i) => (
-                        <div key={i} className="flex gap-3">
-                          {/* Vertical line + dot connector */}
-                          <div className="flex flex-col items-center shrink-0">
-                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-500 mt-1 shrink-0" />
-                            {i < day.schedule!.length - 1 && (
-                              <div className="w-px flex-1 bg-gray-200 dark:bg-gray-600 my-0.5" />
-                            )}
-                          </div>
-                          <div className="flex gap-2 pb-2 min-w-0">
-                            <span className="text-xs font-mono text-gray-400 dark:text-gray-500 shrink-0 tabular-nums">
-                              {entry.time}
-                            </span>
-                            <span className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
-                              {entry.activity}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -305,7 +191,7 @@ export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
                 <MapPin className="w-3 h-3" />
                 Load Day {day.day} into Route Planner
               </Button>
-            </div>
+            </DayDetailCard>
           </Card>
         ))}
       </div>
@@ -316,7 +202,7 @@ export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
     <div className="flex flex-col gap-4">
       <div>
         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Plan Your Trip</h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Tell us about your ideal journey and we'll build an itinerary</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Tell us about your ideal journey and we&apos;ll build an itinerary</p>
       </div>
 
       {/* Days */}

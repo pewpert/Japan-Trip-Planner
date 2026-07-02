@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
-import { GoogleMap, useJsApiLoader, DirectionsRenderer, Marker } from "@react-google-maps/api";
+import { useEffect, useRef, useCallback } from "react";
+import { GoogleMap, useJsApiLoader, Polyline, Marker } from "@react-google-maps/api";
+import { AlertTriangle, X } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { EmptyStatePanel } from "@/components/map/EmptyStatePanel";
@@ -54,46 +55,17 @@ export function TripMap() {
   });
 
   const mapRef = useRef<google.maps.Map | null>(null);
-  const { route, pois, suggestedBreaks, isLoadingRoute, origin, destination, waypoints, isDarkMode, setSelectedBikerPOI } = useTripStore();
-  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+  const { route, pois, suggestedBreaks, isLoadingRoute, isDarkMode, setSelectedBikerPOI, routeError, setRouteError } = useTripStore();
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
   }, []);
 
-  // When route data arrives, fire a client-side DirectionsService call to get
-  // a real DirectionsResult that the renderer can draw correctly.
+  // Fit map to the bounds returned by /api/route — no second Directions call needed
   useEffect(() => {
-    if (!isLoaded) return;
-
-    if (!route || !origin || !destination) {
-      setDirections(null);
-      return;
-    }
-
-    const service = new google.maps.DirectionsService();
-    service.route(
-      {
-        origin,
-        destination,
-        waypoints: waypoints.map((w) => ({ location: w, stopover: true })),
-        travelMode: google.maps.TravelMode.DRIVING,
-        region: "jp",
-      },
-      (result, status) => {
-        if (status === google.maps.DirectionsStatus.OK && result) {
-          setDirections(result);
-        }
-      }
-    );
-  }, [route, isLoaded, origin, destination, waypoints]);
-
-  // Fit map to route bounds when directions arrive
-  useEffect(() => {
-    if (!mapRef.current || !directions) return;
-    const bounds = directions.routes[0].bounds;
-    mapRef.current.fitBounds(bounds, { top: 60, right: 60, bottom: 60, left: 60 });
-  }, [directions]);
+    if (!mapRef.current || !route) return;
+    mapRef.current.fitBounds(route.bounds, { top: 60, right: 60, bottom: 60, left: 60 });
+  }, [route]);
 
   if (loadError) {
     return (
@@ -132,19 +104,24 @@ export function TripMap() {
           styles: isDarkMode ? darkMapStyles : lightMapStyles,
         }}
       >
-        {/* Route overlay — uses real DirectionsResult from client-side service */}
-        {directions && (
-          <DirectionsRenderer
-            directions={directions}
-            options={{
-              suppressMarkers: false,
-              polylineOptions: {
+        {/* Route overlay — drawn from the polyline already returned by /api/route */}
+        {route && route.polylinePath.length > 0 && (
+          <>
+            <Polyline
+              path={route.polylinePath}
+              options={{
                 strokeColor: "#dc2626",
                 strokeWeight: 4,
                 strokeOpacity: 0.85,
-              },
-            }}
-          />
+              }}
+            />
+            <Marker position={route.polylinePath[0]} label="A" title="Start" />
+            <Marker
+              position={route.polylinePath[route.polylinePath.length - 1]}
+              label="B"
+              title="End"
+            />
+          </>
         )}
 
         {/* POI markers */}
@@ -183,6 +160,21 @@ export function TripMap() {
         {/* Biker POI markers */}
         <BikerPOILayer />
       </GoogleMap>
+
+      {/* Route error banner */}
+      {routeError && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[calc(100%-2rem)] max-w-md flex items-start gap-2 bg-red-600 text-white rounded-lg shadow-lg px-4 py-2.5">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <p className="text-sm flex-1 min-w-0">{routeError}</p>
+          <button
+            onClick={() => setRouteError(null)}
+            className="p-0.5 rounded hover:bg-red-700 transition-colors shrink-0"
+            aria-label="Dismiss error"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Biker POI info panel */}
       <BikerPOIInfoPanel />

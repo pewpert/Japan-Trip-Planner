@@ -1,4 +1,4 @@
-import type { TripSettings, CostBreakdown } from "@/types/trip";
+import type { TripSettings, CostBreakdown, ItineraryDay } from "@/types/trip";
 
 /**
  * Estimates fuel cost for a route.
@@ -102,6 +102,61 @@ export function calculateTripCostRange(
       total: highFuel + highTolls + highAccommodation,
       distanceKm,
       durationMinutes,
+    },
+  };
+}
+
+/**
+ * Low/high cost range for a full multi-day itinerary.
+ * Fuel and tolls are summed across every day's distance; accommodation is
+ * one night per itinerary day. Uses the same low/high multipliers as
+ * calculateTripCostRange so single-leg and whole-trip estimates stay consistent.
+ */
+export function calculateItineraryCostRange(
+  itinerary: ItineraryDay[],
+  settings: TripSettings
+): { low: CostBreakdown; high: CostBreakdown } {
+  const totalDistanceKm = itinerary.reduce((sum, d) => sum + d.distanceKm, 0);
+  const totalRidingMinutes = itinerary.reduce(
+    (sum, d) => sum + d.ridingTimeMinutes,
+    0
+  );
+  const nights = itinerary.length;
+
+  const baseFuel = itinerary.reduce(
+    (sum, d) => sum + calculateFuelCost(d.distanceKm, settings),
+    0
+  );
+  const baseTolls = itinerary.reduce(
+    (sum, d) => sum + estimateTollCost(d.distanceKm, settings),
+    0
+  );
+  const baseAccommodation = estimateAccommodationCost(settings.budget) * nights;
+
+  const lowFuel = Math.round(baseFuel * 0.9);
+  const lowTolls = Math.round(baseTolls * 0.8);
+  const lowAccommodation = Math.round(baseAccommodation * 0.85);
+
+  const highFuel = Math.round(baseFuel * 1.15);
+  const highTolls = Math.round(baseTolls * 1.2);
+  const highAccommodation = Math.round(baseAccommodation * 1.2);
+
+  return {
+    low: {
+      fuel: lowFuel,
+      tolls: lowTolls,
+      accommodation: lowAccommodation,
+      total: lowFuel + lowTolls + lowAccommodation,
+      distanceKm: totalDistanceKm,
+      durationMinutes: totalRidingMinutes,
+    },
+    high: {
+      fuel: highFuel,
+      tolls: highTolls,
+      accommodation: highAccommodation,
+      total: highFuel + highTolls + highAccommodation,
+      distanceKm: totalDistanceKm,
+      durationMinutes: totalRidingMinutes,
     },
   };
 }

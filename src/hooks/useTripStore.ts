@@ -29,6 +29,10 @@ interface TripStore {
   isSidebarOpen: boolean;
   isDarkMode: boolean;
 
+  // Transient route load error (session only, not persisted)
+  routeError: string | null;
+  setRouteError: (error: string | null) => void;
+
   // Suggested breaks (computed from route, session-only)
   suggestedBreaks: SuggestedBreak[];
   setSuggestedBreaks: (breaks: SuggestedBreak[]) => void;
@@ -99,6 +103,7 @@ export const useTripStore = create<TripStore>()(
       isLoadingWeather: false,
       isSidebarOpen: true,
       isDarkMode: false,
+      routeError: null,
       suggestedBreaks: [],
       settings: defaultSettings,
       savedItineraries: [],
@@ -127,6 +132,7 @@ export const useTripStore = create<TripStore>()(
       setCostBreakdown: (costBreakdown) => set({ costBreakdown }),
       setLoadingRoute: (isLoadingRoute) => set({ isLoadingRoute }),
       setLoadingWeather: (isLoadingWeather) => set({ isLoadingWeather }),
+      setRouteError: (routeError) => set({ routeError }),
       toggleSidebar: () =>
         set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
       setSuggestedBreaks: (suggestedBreaks) => set({ suggestedBreaks }),
@@ -189,6 +195,7 @@ export const useTripStore = create<TripStore>()(
           pois: [],
           weather: [],
           costBreakdown: null,
+          routeError: null,
           originCoords: null,
           destinationCoords: null,
           waypointCoords: [],

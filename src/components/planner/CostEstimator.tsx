@@ -33,7 +33,7 @@ export function CostEstimator() {
       label: "Accommodation",
       low: range.low.accommodation,
       high: range.high.accommodation,
-      sub: "per night",
+      sub: "1 night stay",
       color: "text-purple-600 bg-purple-50 dark:bg-purple-900/30",
     },
   ];
@@ -73,7 +73,10 @@ export function CostEstimator() {
           <div className="p-1.5 rounded-lg text-red-600 bg-red-50 dark:bg-red-900/30">
             <TrendingUp className="w-4 h-4" />
           </div>
-          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Total (1 night)</p>
+          <div>
+            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Per-leg estimate</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">fuel + tolls for this leg · 1 night stay</p>
+          </div>
         </div>
         <span className="text-base font-bold text-red-600 tabular-nums">
           {formatJPY(range.low.total)} – {formatJPY(range.high.total)}

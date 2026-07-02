@@ -29,6 +29,7 @@ export function SeedRouteCards({ routes = SEED_ROUTES, desktopClassName = "top-4
     setSuggestedBreaks,
     setLoadingRoute,
     setItinerary,
+    setRouteError,
     settings,
   } = useTripStore();
 
@@ -60,7 +61,7 @@ export function SeedRouteCards({ routes = SEED_ROUTES, desktopClassName = "top-4
         if (seedItinerary) setItinerary(seedItinerary);
       },
       onError: (msg) => {
-        console.error("[SeedRouteCards]", msg);
+        setRouteError(`Couldn't plan "${seed.name}": ${msg}`);
       },
       onFinally: () => {
         setLoadingRoute(false);
