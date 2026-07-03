@@ -1,12 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Shippori_Mincho } from "next/font/google";
 import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"] });
 
+// Serif display face for headings — exposed as --font-display-serif and
+// consumed by the `font-display` utility defined in globals.css
+const shippori = Shippori_Mincho({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-display-serif",
+});
+
 export const metadata: Metadata = {
   title: "Japan バイク Trip Planner",
-  description: "Plan your motorcycle trip through rural Japan",
+  description:
+    "Plan motorcycle trips through rural Japan — routes, weather, costs, and AI itineraries.",
   icons: { icon: "/favicon.ico" },
 };
 
@@ -31,7 +40,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${geist.className} antialiased h-full`}>{children}</body>
+      <body className={`${geist.className} ${shippori.variable} antialiased h-full`}>{children}</body>
     </html>
   );
 }

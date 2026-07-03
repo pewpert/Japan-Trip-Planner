@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { planRoute } from "@/lib/routeApi";
 import { DayDetailCard } from "./DayDetailCard";
 
@@ -61,17 +62,18 @@ export function DayView() {
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
-          Day View
-        </h2>
-        <button
-          onClick={() => setItinerary(null)}
-          className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-        >
-          ✕ Exit day view
-        </button>
-      </div>
+      <SectionHeading
+        action={
+          <button
+            onClick={() => setItinerary(null)}
+            className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors shrink-0"
+          >
+            ✕ Exit day view
+          </button>
+        }
+      >
+        Day View
+      </SectionHeading>
 
       {/* Day pills */}
       <div className="flex gap-1.5 flex-wrap">

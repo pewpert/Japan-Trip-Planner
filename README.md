@@ -29,16 +29,16 @@ A motorcycle trip planning web app for exploring rural Japan by motorcycle. Plan
    ```bash
    npm install
    ```
-3. Create `.env.local` with your API keys:
-   ```
-   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_key
-   ANTHROPIC_API_KEY=your_anthropic_key
-   ```
+3. Copy `.env.local.example` to `.env.local` and fill in your keys
+   (keep `ANTHROPIC_MOCK=true` to develop without an Anthropic key)
 4. Run the dev server:
    ```bash
-   npm run dev
+   npm run dev:mock   # or `npm run dev` with a real ANTHROPIC_API_KEY
    ```
 5. Open [http://localhost:3000](http://localhost:3000)
+
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for the full local-development guide
+and troubleshooting.
 
 ## Roadmap
 

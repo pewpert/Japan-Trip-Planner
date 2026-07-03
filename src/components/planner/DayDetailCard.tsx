@@ -49,8 +49,8 @@ export function DayDetailCard({
           <Bike className="w-4 h-4 text-red-600" />
         </div>
         <div>
-          <p className="text-xs font-bold text-red-600 uppercase tracking-wide">Day {day.day}</p>
-          <p className={`text-sm font-semibold text-gray-900 dark:text-white leading-tight ${print ? "print:text-black" : ""}`}>
+          <p className="font-display text-xs font-bold text-red-600 uppercase tracking-[0.14em]">Day {day.day}</p>
+          <p className={`font-display text-sm font-semibold text-gray-900 dark:text-white leading-tight ${print ? "print:text-black" : ""}`}>
             {day.title}
           </p>
         </div>

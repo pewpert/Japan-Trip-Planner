@@ -3,6 +3,7 @@
 import { useTripStore } from "@/hooks/useTripStore";
 import { formatDuration, formatJPY, calculateItineraryCostRange } from "@/lib/costCalc";
 import { Coffee, Printer } from "lucide-react";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { DayDetailCard } from "./DayDetailCard";
 import type { PrintData } from "@/components/print/PrintLayout";
 
@@ -50,22 +51,23 @@ export function SummaryTab() {
     <div className="flex flex-col gap-6 print:gap-4">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
-          Trip Summary
-        </h2>
-        <button
-          onClick={handleOpenPrintView}
-          className="flex items-center gap-1.5 text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors"
-        >
-          <Printer className="w-3.5 h-3.5" />
-          Export / Print
-        </button>
-      </div>
+      <SectionHeading
+        action={
+          <button
+            onClick={handleOpenPrintView}
+            className="flex items-center gap-1.5 text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors shrink-0"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            Export / Print
+          </button>
+        }
+      >
+        Trip Summary
+      </SectionHeading>
 
       {/* Trip header */}
       <div className="bg-gray-50 dark:bg-gray-700/40 rounded-xl p-4 border border-gray-100 dark:border-gray-700 print:border-gray-300 print:bg-white">
-        <h1 className="text-base font-bold text-gray-900 dark:text-white print:text-black mb-2">
+        <h1 className="font-display text-base font-bold text-gray-900 dark:text-white print:text-black mb-2">
           🏍️ Japan バイク Trip Planner
         </h1>
         <div className="flex flex-col gap-1">

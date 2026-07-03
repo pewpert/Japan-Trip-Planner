@@ -119,13 +119,13 @@ function SeedCard({ seed, loading, disabled, onLoad }: SeedCardProps) {
         disabled={disabled}
         className={`
           w-full text-left
-          bg-gray-900/85 dark:bg-gray-950/90
-          backdrop-blur-sm border border-white/10
-          rounded-xl p-3 shadow-lg
+          bg-gray-950/85
+          backdrop-blur-md border border-white/10
+          rounded-2xl p-3 shadow-lg
           transition-all duration-150
           ${disabled
             ? "opacity-60 cursor-not-allowed"
-            : "hover:bg-gray-900/95 hover:border-white/20 cursor-pointer"
+            : "hover:bg-gray-950/95 hover:border-white/20 hover:-translate-y-0.5 cursor-pointer"
           }
         `}
       >
@@ -144,7 +144,7 @@ function SeedCard({ seed, loading, disabled, onLoad }: SeedCardProps) {
         </div>
 
         {/* Route name */}
-        <p className="text-sm font-semibold text-white leading-tight mb-1">
+        <p className="font-display text-sm font-semibold text-white leading-tight mb-1">
           {seed.name}
         </p>
 

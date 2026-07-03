@@ -1,8 +1,10 @@
 "use client";
 
+import { memo } from "react";
 import { Droplets, Wind } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
 import { Card } from "@/components/ui/Card";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { WeatherPoint } from "@/types/weather";
 
@@ -14,9 +16,7 @@ export function WeatherStrip() {
 
   return (
     <Card padding="md" className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
-        Weather Along Route
-      </h2>
+      <SectionHeading>Weather Along Route</SectionHeading>
 
       {isLoadingWeather ? (
         <div className="flex justify-center py-4">
@@ -39,7 +39,7 @@ export function WeatherStrip() {
   );
 }
 
-function WeatherPointCard({ point }: { point: WeatherPoint }) {
+const WeatherPointCard = memo(function WeatherPointCard({ point }: { point: WeatherPoint }) {
   const { current } = point;
 
   return (
@@ -85,4 +85,4 @@ function WeatherPointCard({ point }: { point: WeatherPoint }) {
       </span>
     </div>
   );
-}
+});

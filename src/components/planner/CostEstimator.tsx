@@ -2,6 +2,7 @@
 
 import { Fuel, CreditCard, Building2, TrendingUp } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { formatJPY, formatDuration, calculateTripCostRange } from "@/lib/costCalc";
 
 export function CostEstimator() {
@@ -40,7 +41,7 @@ export function CostEstimator() {
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Cost Estimate</h2>
+      <SectionHeading>Cost Estimate</SectionHeading>
 
       {/* Route summary */}
       <div className="flex gap-3 text-sm text-gray-600 dark:text-gray-300">

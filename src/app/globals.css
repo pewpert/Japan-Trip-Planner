@@ -3,9 +3,45 @@
 /* Enable class-based dark mode — applies dark: utilities when .dark is on <html> */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Tōge Ink design system
+ * ----------------------
+ * Warm washi paper in the light, deep indigo night in the dark, and a
+ * vermillion (torii) accent throughout. The red-* and gray-* ramps below
+ * override Tailwind's defaults, so every existing red/gray utility in the
+ * components picks up the palette automatically.
+ */
+@theme {
+  /* Vermillion — replaces Tailwind red */
+  --color-red-50: #fdf4f0;
+  --color-red-100: #fbe6dd;
+  --color-red-200: #f6cbbb;
+  --color-red-300: #eea68d;
+  --color-red-400: #e57c5c;
+  --color-red-500: #de5b3b;
+  --color-red-600: #d9412b;
+  --color-red-700: #b23420;
+  --color-red-800: #8f2c1d;
+  --color-red-900: #75281c;
+  --color-red-950: #40130b;
+
+  /* Warm ink neutrals — washi at the light end, indigo night at the dark end */
+  --color-gray-50: #faf7f1;
+  --color-gray-100: #f2ede3;
+  --color-gray-200: #e6dfd1;
+  --color-gray-300: #d2c9b8;
+  --color-gray-400: #a69e90;
+  --color-gray-500: #787164;
+  --color-gray-600: #57524a;
+  --color-gray-700: #3b3b45;
+  --color-gray-800: #232634;
+  --color-gray-900: #171a26;
+  --color-gray-950: #0f111a;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf6ef;
+  --foreground: #1c1917;
 }
 
 @theme inline {
@@ -13,23 +49,48 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Serif display face for headings — falls back to native Japanese serifs */
+  --font-display: var(--font-display-serif), "Hiragino Mincho ProN", "Yu Mincho",
+    Georgia, serif;
 }
 
 /* System preference fallback (used before JS hydrates) */
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #101219;
+    --foreground: #eae6dc;
   }
 }
 
 /* Class-based dark mode (set by toggle button, persisted to localStorage) */
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --background: #101219;
+  --foreground: #eae6dc;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+/* Vermillion text selection */
+::selection {
+  background: #d9412b;
+  color: #ffffff;
+}
+
+/* Slim, quiet scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(0 0 0 / 0.16);
+  border-radius: 8px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.16);
 }

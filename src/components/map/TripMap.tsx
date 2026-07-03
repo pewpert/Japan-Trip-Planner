@@ -25,27 +25,30 @@ const POI_ICONS: Record<POI["type"], string> = {
   festival: "🎌",
 };
 
-// Light mode map style
+// Light mode map style — washi paper tones (Tōge Ink)
 const lightMapStyles: google.maps.MapTypeStyle[] = [
   { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#d4edda" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#fde68a" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#bfdbfe" }] },
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f4efe4" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#dde5d0" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#f0dcb0" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#c5d6dc" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#57524a" }] },
 ];
 
-// Dark mode map style
+// Dark mode map style — indigo night (Tōge Ink)
 const darkMapStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#212121" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
+  { elementType: "geometry", stylers: [{ color: "#1a1d29" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#8d91a3" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#1a1d29" }] },
   { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#373737" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#3c3c3c" }] },
-  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
-  { featureType: "administrative", elementType: "labels.text.fill", stylers: [{ color: "#a8a8a8" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#1e2a2c" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#2a2d3c" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#353950" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9aa0b5" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0b0d15" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#4d5468" }] },
+  { featureType: "administrative", elementType: "labels.text.fill", stylers: [{ color: "#a0a3b2" }] },
 ];
 
 export function TripMap() {
@@ -163,7 +166,7 @@ export function TripMap() {
 
       {/* Route error banner */}
       {routeError && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[calc(100%-2rem)] max-w-md flex items-start gap-2 bg-red-600 text-white rounded-lg shadow-lg px-4 py-2.5">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[calc(100%-2rem)] max-w-md flex items-start gap-2 bg-red-600/95 backdrop-blur-sm text-white rounded-xl shadow-lg px-4 py-2.5">
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           <p className="text-sm flex-1 min-w-0">{routeError}</p>
           <button

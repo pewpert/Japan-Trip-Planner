@@ -5,6 +5,7 @@ import { MapPin, ArrowLeft, Sparkles } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { DayDetailCard } from "./DayDetailCard";
 import type { ItineraryDay } from "@/types/trip";
@@ -162,9 +163,7 @@ export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
           Back to form
         </button>
 
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
-          Your {itinerary.length}-Day Itinerary
-        </h2>
+        <SectionHeading>Your {itinerary.length}-Day Itinerary</SectionHeading>
 
         {itinerary.map((day) => (
           <Card key={day.day} padding="md">
@@ -200,9 +199,9 @@ export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Plan Your Trip</h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Tell us about your ideal journey and we&apos;ll build an itinerary</p>
+      <div className="flex flex-col gap-1">
+        <SectionHeading>Plan Your Trip</SectionHeading>
+        <p className="text-xs text-gray-500 dark:text-gray-400">Tell us about your ideal journey and we&apos;ll build an itinerary</p>
       </div>
 
       {/* Days */}

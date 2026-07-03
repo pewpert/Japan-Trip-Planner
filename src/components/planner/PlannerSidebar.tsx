@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Bike, Sun, Moon, Map as MapIcon, ClipboardList } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sun, Moon, Map as MapIcon, ClipboardList } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
 import { useWeather } from "@/hooks/useWeather";
 import { RouteInputs } from "./RouteInputs";
@@ -31,14 +31,35 @@ function TabButton({ label, active, onClick }: TabButtonProps) {
   return (
     <button
       onClick={onClick}
-      className={`flex-1 pb-2.5 text-sm font-medium transition-colors border-b-2 -mb-px
+      className={`relative flex-1 pb-2.5 text-sm transition-colors
         ${active
-          ? "border-red-600 text-red-600"
-          : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+          ? "font-semibold text-red-600"
+          : "font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
         }`}
     >
       {label}
+      {/* Animated underline */}
+      <span
+        aria-hidden
+        className={`absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-red-600 transition-all duration-200
+          ${active ? "opacity-100 scale-x-100" : "opacity-0 scale-x-50"}`}
+      />
     </button>
+  );
+}
+
+/** Torii-gate brand mark — the app's visual signature */
+function ToriiMark({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} aria-hidden fill="currentColor">
+      {/* kasagi — curved top beam */}
+      <path d="M2.5 8.5 Q16 4.5 29.5 8.5 L28.5 12 L3.5 12 Z" />
+      {/* nuki — tie beam */}
+      <rect x="6" y="16" width="20" height="2.8" rx="0.6" />
+      {/* pillars, slightly splayed */}
+      <path d="M7.2 12 L10.4 12 L11.6 28.5 L8 28.5 Z" />
+      <path d="M21.6 12 L24.8 12 L24 28.5 L20.4 28.5 Z" />
+    </svg>
   );
 }
 
@@ -68,13 +89,13 @@ export function PlannerSidebar() {
       >
         <div className="flex flex-col gap-4 p-4 pb-20 md:pb-4 overflow-y-auto h-full">
           {/* Header */}
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-red-600 rounded-lg shrink-0">
-              <Bike className="w-5 h-5 text-white" />
-            </div>
+          <div className="flex items-center gap-2.5">
+            <ToriiMark className="w-9 h-9 text-red-600 shrink-0" />
             <div className="flex-1 min-w-0">
-              <h1 className="text-base font-bold text-gray-900 dark:text-white">Japan バイク Trip Planner</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Discover rural Japan by motorcycle</p>
+              <h1 className="font-display text-[17px] font-bold leading-tight text-gray-900 dark:text-white">
+                Japan バイク Trip Planner
+              </h1>
+              <p className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">Discover rural Japan by motorcycle</p>
             </div>
             {/* Mobile: jump to the map */}
             <button
@@ -108,8 +129,8 @@ export function PlannerSidebar() {
           </div>
 
           {/* Onboarding nudge */}
-          <p className="text-xs text-gray-400 dark:text-gray-500 -mt-2">
-            New here? Generate a trip in <span className="font-medium text-gray-500 dark:text-gray-400">Itinerary</span>, review it in <span className="font-medium text-gray-500 dark:text-gray-400">Summary</span>, then export or print.
+          <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2 border-l-2 border-red-600/40 pl-2.5">
+            New here? Generate a trip in <span className="font-medium text-gray-600 dark:text-gray-300">Itinerary</span>, review it in <span className="font-medium text-gray-600 dark:text-gray-300">Summary</span>, then export or print.
           </p>
 
           {/* Route tab content */}
@@ -176,7 +197,7 @@ export function PlannerSidebar() {
       </button>
 
       {/* Mobile: Planner / Map segmented control */}
-      <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-30 flex bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-full shadow-lg overflow-hidden">
+      <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-30 flex bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-full shadow-lg shadow-gray-900/10 overflow-hidden">
         <button
           onClick={openSidebar}
           aria-pressed={isSidebarOpen}

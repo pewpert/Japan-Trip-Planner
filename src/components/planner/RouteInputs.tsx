@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { MapPin, Navigation, Plus, X, Search, GripVertical } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
 import { PlaceAutocompleteInput } from "@/components/ui/PlaceAutocompleteInput";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Button } from "@/components/ui/Button";
 import { planRoute } from "@/lib/routeApi";
 import { DayView } from "./DayView";
@@ -92,7 +93,7 @@ export function RouteInputs() {
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Route</h2>
+      <SectionHeading>Route</SectionHeading>
 
       <PlaceAutocompleteInput
         label="Start"

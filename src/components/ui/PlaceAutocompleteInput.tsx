@@ -72,7 +72,7 @@ export function PlaceAutocompleteInput({
   };
 
   const inputClass = `
-    w-full rounded-lg border border-gray-200 dark:border-gray-600
+    w-full rounded-xl border border-gray-200 dark:border-gray-600
     bg-white dark:bg-gray-800
     py-2.5 text-sm
     text-gray-900 dark:text-white

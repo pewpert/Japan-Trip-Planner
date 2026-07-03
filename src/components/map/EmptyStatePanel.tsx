@@ -19,8 +19,8 @@ export function EmptyStatePanel() {
     <>
       {/* Desktop: hero + region picker sits above the cards */}
       <div className="absolute top-4 left-4 hidden md:flex flex-col gap-2 z-10 max-w-sm pointer-events-none">
-        <p className="text-sm font-semibold text-white drop-shadow pointer-events-none"
-           style={{ textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>
+        <p className="font-display text-lg font-bold text-white pointer-events-none"
+           style={{ textShadow: "0 1px 6px rgba(0,0,0,0.65)" }}>
           🏍️ Where in Japan do you want to ride?
         </p>
         <div className="pointer-events-auto">

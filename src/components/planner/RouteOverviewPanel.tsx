@@ -2,6 +2,7 @@
 
 import { Coffee } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { formatDuration } from "@/lib/costCalc";
 import { TripExportButton } from "./TripExportButton";
 
@@ -12,9 +13,7 @@ export function RouteOverviewPanel() {
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
-        Route Overview
-      </h2>
+      <SectionHeading>Route Overview</SectionHeading>
 
       {/* Summary row */}
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-gray-600 dark:text-gray-300">
