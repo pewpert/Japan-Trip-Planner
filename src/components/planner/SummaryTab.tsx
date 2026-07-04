@@ -95,7 +95,7 @@ export function SummaryTab() {
 
       {/* Whole-trip cost range */}
       <div className="flex flex-col gap-2">
-        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+        <h3 className="font-display text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em]">
           Estimated Trip Total ({totalDays} {totalDays === 1 ? "day" : "days"} · {totalNights} {totalNights === 1 ? "night" : "nights"})
         </h3>
         <div className="grid grid-cols-2 gap-2">
@@ -120,7 +120,7 @@ export function SummaryTab() {
       {/* Suggested breaks */}
       {suggestedBreaks.length > 0 && (
         <div className="flex flex-col gap-2">
-          <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+          <h3 className="font-display text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em]">
             Suggested Breaks
           </h3>
           {suggestedBreaks.map((brk) => (
@@ -138,7 +138,7 @@ export function SummaryTab() {
 
       {/* Day-by-day itinerary */}
       <div className="flex flex-col gap-4">
-        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+        <h3 className="font-display text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em]">
           Day-by-Day
         </h3>
         {itinerary.map((day) => (

@@ -46,7 +46,7 @@ export function BikerPOIInfoPanel() {
             </span>
             <span className="text-xs text-gray-400 dark:text-gray-500 capitalize">{poi.region}</span>
           </div>
-          <h3 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{poi.name}</h3>
+          <h3 className="font-display text-sm font-bold text-gray-900 dark:text-white leading-tight">{poi.name}</h3>
         </div>
         <button
           onClick={() => setSelectedBikerPOI(null)}

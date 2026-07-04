@@ -8,9 +8,9 @@ import { planRoute } from "@/lib/routeApi";
 import { Tooltip } from "@/components/ui/Tooltip";
 
 const DIFFICULTY_STYLES = {
-  beginner: { dot: "bg-green-400", label: "Beginner" },
-  intermediate: { dot: "bg-yellow-400", label: "Intermediate" },
-  advanced: { dot: "bg-red-400", label: "Advanced" },
+  beginner: { dot: "bg-green-400", bar: "border-l-green-400", label: "Beginner" },
+  intermediate: { dot: "bg-yellow-400", bar: "border-l-yellow-400", label: "Intermediate" },
+  advanced: { dot: "bg-red-400", bar: "border-l-red-400", label: "Advanced" },
 };
 
 interface SeedRouteCardsProps {
@@ -120,8 +120,8 @@ function SeedCard({ seed, loading, disabled, onLoad }: SeedCardProps) {
         className={`
           w-full text-left
           bg-gray-950/85
-          backdrop-blur-md border border-white/10
-          rounded-2xl p-3 shadow-lg
+          backdrop-blur-md border border-white/10 border-l-[3px] ${diff.bar}
+          rounded-2xl p-3.5 shadow-lg
           transition-all duration-150
           ${disabled
             ? "opacity-60 cursor-not-allowed"
@@ -144,7 +144,7 @@ function SeedCard({ seed, loading, disabled, onLoad }: SeedCardProps) {
         </div>
 
         {/* Route name */}
-        <p className="font-display text-sm font-semibold text-white leading-tight mb-1">
+        <p className="font-display text-[15px] font-bold text-white leading-tight mb-1">
           {seed.name}
         </p>
 
@@ -164,7 +164,7 @@ function SeedCard({ seed, loading, disabled, onLoad }: SeedCardProps) {
               Planning route…
             </span>
           ) : (
-            <span className="text-xs text-red-400 hover:text-red-300 font-medium">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-white bg-red-600 group-hover:bg-red-500 rounded-full px-2.5 py-1 transition-colors">
               Plan this route →
             </span>
           )}

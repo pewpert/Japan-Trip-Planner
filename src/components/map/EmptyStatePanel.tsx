@@ -18,18 +18,24 @@ export function EmptyStatePanel() {
   return (
     <>
       {/* Desktop: hero + region picker sits above the cards */}
-      <div className="absolute top-4 left-4 hidden md:flex flex-col gap-2 z-10 max-w-sm pointer-events-none">
-        <p className="font-display text-lg font-bold text-white pointer-events-none"
-           style={{ textShadow: "0 1px 6px rgba(0,0,0,0.65)" }}>
-          🏍️ Where in Japan do you want to ride?
-        </p>
+      <div className="absolute top-5 left-5 hidden md:flex flex-col gap-3 z-10 max-w-md pointer-events-none">
+        <div className="pointer-events-none">
+          <p className="font-display text-[11px] font-semibold uppercase tracking-[0.3em] text-red-400"
+             style={{ textShadow: "0 1px 4px rgba(0,0,0,0.7)" }}>
+            峠 · Tōge — the mountain pass
+          </p>
+          <p className="font-display text-3xl font-bold text-white leading-snug"
+             style={{ textShadow: "0 2px 10px rgba(0,0,0,0.7)" }}>
+            Where in Japan do you<br />want to ride?
+          </p>
+        </div>
         <div className="pointer-events-auto">
           <RegionPicker selected={selectedRegion} onSelect={setSelectedRegion} />
         </div>
       </div>
 
-      {/* Cards — desktop grid uses top-20 to clear the hero text above */}
-      <SeedRouteCards routes={filteredRoutes} desktopClassName="top-20 left-4" />
+      {/* Cards — desktop grid uses top-44 to clear the hero text above */}
+      <SeedRouteCards routes={filteredRoutes} desktopClassName="top-44 left-5" />
 
       {/* Mobile: region picker above the card scroll strip */}
       <div className="absolute md:hidden z-10 bottom-36 left-4 right-4">

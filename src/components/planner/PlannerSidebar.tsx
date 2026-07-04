@@ -89,13 +89,13 @@ export function PlannerSidebar() {
       >
         <div className="flex flex-col gap-4 p-4 pb-20 md:pb-4 overflow-y-auto h-full">
           {/* Header */}
-          <div className="flex items-center gap-2.5">
-            <ToriiMark className="w-9 h-9 text-red-600 shrink-0" />
+          <div className="flex items-center gap-3">
+            <ToriiMark className="w-11 h-11 text-red-600 shrink-0 drop-shadow-sm" />
             <div className="flex-1 min-w-0">
-              <h1 className="font-display text-[17px] font-bold leading-tight text-gray-900 dark:text-white">
-                Japan バイク Trip Planner
+              <h1 className="font-display text-xl font-bold leading-tight text-balance text-gray-900 dark:text-white">
+                Japan <span className="text-red-600">バイク</span> Trip Planner
               </h1>
-              <p className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">Discover rural Japan by motorcycle</p>
+              <p className="hidden sm:block text-xs tracking-wide text-gray-500 dark:text-gray-400">Discover rural Japan by motorcycle</p>
             </div>
             {/* Mobile: jump to the map */}
             <button
