@@ -7,13 +7,15 @@ interface SectionHeadingProps {
 }
 
 /**
- * Shared section label: serif small-caps title with a hairline rule.
- * Part of the Tōge Ink design system — use for every sidebar section.
+ * Shared section label with a hairline rule.
+ * Tōge Ink type rules: the serif display face is reserved for real headings
+ * (15px+); small uppercase labels like this stay in the sans face with only
+ * a touch of tracking so they remain readable.
  */
 export function SectionHeading({ children, action }: SectionHeadingProps) {
   return (
     <div className="flex items-center gap-3">
-      <h2 className="font-display text-[13px] font-semibold uppercase tracking-[0.16em] text-gray-700 dark:text-gray-200 shrink-0">
+      <h2 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 shrink-0">
         {children}
       </h2>
       <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" aria-hidden />

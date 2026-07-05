@@ -132,7 +132,7 @@ function SeedCard({ seed, loading, disabled, onLoad }: SeedCardProps) {
         {/* Top row: difficulty + badges */}
         <div className="flex items-center gap-1.5 mb-2 flex-wrap">
           <span className={`w-2 h-2 rounded-full shrink-0 ${diff.dot}`} />
-          <span className="text-xs text-white/50">{diff.label}</span>
+          <span className="text-xs text-white/70">{diff.label}</span>
           <span className="ml-auto flex gap-1.5">
             <span className="bg-white/15 text-white text-xs rounded-full px-2 py-0.5 whitespace-nowrap">
               {seed.durationDays}d
@@ -144,12 +144,12 @@ function SeedCard({ seed, loading, disabled, onLoad }: SeedCardProps) {
         </div>
 
         {/* Route name */}
-        <p className="font-display text-[15px] font-bold text-white leading-tight mb-1">
+        <p className="text-[15px] font-bold text-white leading-tight mb-1">
           {seed.name}
         </p>
 
         {/* Tagline */}
-        <p className="text-xs text-white/65 line-clamp-2 leading-relaxed">
+        <p className="text-[13px] text-white/80 line-clamp-2 leading-relaxed">
           {seed.tagline}
         </p>
 

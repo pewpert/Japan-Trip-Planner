@@ -92,7 +92,7 @@ export function PlannerSidebar() {
           <div className="flex items-center gap-3">
             <ToriiMark className="w-11 h-11 text-red-600 shrink-0 drop-shadow-sm" />
             <div className="flex-1 min-w-0">
-              <h1 className="font-display text-xl font-bold leading-tight text-balance text-gray-900 dark:text-white">
+              <h1 className="text-lg font-bold tracking-tight leading-tight text-balance text-gray-900 dark:text-white">
                 Japan <span className="text-red-600">バイク</span> Trip Planner
               </h1>
               <p className="hidden sm:block text-xs tracking-wide text-gray-500 dark:text-gray-400">Discover rural Japan by motorcycle</p>
@@ -129,8 +129,8 @@ export function PlannerSidebar() {
           </div>
 
           {/* Onboarding nudge */}
-          <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2 border-l-2 border-red-600/40 pl-2.5">
-            New here? Generate a trip in <span className="font-medium text-gray-600 dark:text-gray-300">Itinerary</span>, review it in <span className="font-medium text-gray-600 dark:text-gray-300">Summary</span>, then export or print.
+          <p className="text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 -mt-2 border-l-2 border-red-600/40 pl-2.5">
+            New here? Generate a trip in <span className="font-medium text-gray-700 dark:text-gray-200">Itinerary</span>, review it in <span className="font-medium text-gray-700 dark:text-gray-200">Summary</span>, then export or print.
           </p>
 
           {/* Route tab content */}
@@ -158,8 +158,8 @@ export function PlannerSidebar() {
 
               <Card padding="sm">
                 <div className="flex flex-col gap-1">
-                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">Quick Tips</p>
-                  <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1 list-disc list-inside">
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Quick Tips</p>
+                  <ul className="text-[13px] leading-relaxed text-gray-600 dark:text-gray-400 space-y-1.5 list-disc list-inside">
                     <li>Look for 道の駅 (Michi-no-Eki) for free rest stops</li>
                     <li>Mountain passes may close Nov–Apr due to snow</li>
                     <li>You need an IDP to ride as a foreign visitor</li>

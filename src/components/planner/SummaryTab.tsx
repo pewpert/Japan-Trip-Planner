@@ -67,7 +67,7 @@ export function SummaryTab() {
 
       {/* Trip header */}
       <div className="bg-gray-50 dark:bg-gray-700/40 rounded-xl p-4 border border-gray-100 dark:border-gray-700 print:border-gray-300 print:bg-white">
-        <h1 className="font-display text-base font-bold text-gray-900 dark:text-white print:text-black mb-2">
+        <h1 className="text-base font-bold text-gray-900 dark:text-white print:text-black mb-2">
           🏍️ Japan バイク Trip Planner
         </h1>
         <div className="flex flex-col gap-1">
@@ -95,7 +95,7 @@ export function SummaryTab() {
 
       {/* Whole-trip cost range */}
       <div className="flex flex-col gap-2">
-        <h3 className="font-display text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em]">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">
           Estimated Trip Total ({totalDays} {totalDays === 1 ? "day" : "days"} · {totalNights} {totalNights === 1 ? "night" : "nights"})
         </h3>
         <div className="grid grid-cols-2 gap-2">
@@ -120,7 +120,7 @@ export function SummaryTab() {
       {/* Suggested breaks */}
       {suggestedBreaks.length > 0 && (
         <div className="flex flex-col gap-2">
-          <h3 className="font-display text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em]">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">
             Suggested Breaks
           </h3>
           {suggestedBreaks.map((brk) => (
@@ -138,7 +138,7 @@ export function SummaryTab() {
 
       {/* Day-by-day itinerary */}
       <div className="flex flex-col gap-4">
-        <h3 className="font-display text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em]">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">
           Day-by-Day
         </h3>
         {itinerary.map((day) => (

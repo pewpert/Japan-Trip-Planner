@@ -30,8 +30,8 @@
   --color-gray-100: #f2ede3;
   --color-gray-200: #e6dfd1;
   --color-gray-300: #d2c9b8;
-  --color-gray-400: #a69e90;
-  --color-gray-500: #787164;
+  --color-gray-400: #9c9486;
+  --color-gray-500: #6d675b;
   --color-gray-600: #57524a;
   --color-gray-700: #3b3b45;
   --color-gray-800: #232634;
@@ -49,9 +49,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  /* Serif display face for headings — falls back to native Japanese serifs */
-  --font-display: var(--font-display-serif), "Hiragino Mincho ProN", "Yu Mincho",
-    Georgia, serif;
 }
 
 /* System preference fallback (used before JS hydrates) */
