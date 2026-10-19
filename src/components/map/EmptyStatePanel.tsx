@@ -2,11 +2,19 @@
 
 import { useState } from "react";
 import { SEED_ROUTES, type SeedRoute } from "@/data/seedRoutes";
-import { SeedRouteCards } from "@/components/map/SeedRouteCards";
-import { RegionPicker } from "@/components/map/RegionPicker";
+import { SeedRouteList } from "@/components/map/SeedRouteCards";
+import { Segmented } from "@/components/ui/Segmented";
 
 type Region = SeedRoute["region"] | "all";
 
+const REGION_OPTIONS: { value: Region; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "kanto", label: "Kantō 関東" },
+  { value: "chubu", label: "Chūbu 中部" },
+  { value: "kyushu", label: "Kyūshū 九州" },
+];
+
+/** Shown over the map until a route is loaded — the way in for riders without a plan yet. */
 export function EmptyStatePanel() {
   const [selectedRegion, setSelectedRegion] = useState<Region>("all");
 
@@ -17,29 +25,29 @@ export function EmptyStatePanel() {
 
   return (
     <>
-      {/* Desktop: hero + region picker sits above the cards */}
-      <div className="absolute top-5 left-5 hidden md:flex flex-col gap-3 z-10 max-w-md pointer-events-none">
-        <div className="pointer-events-none">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-red-400"
-             style={{ textShadow: "0 1px 4px rgba(0,0,0,0.7)" }}>
-            峠 · Tōge — the mountain pass
-          </p>
-          <p className="text-3xl font-bold tracking-tight text-white leading-snug"
-             style={{ textShadow: "0 2px 10px rgba(0,0,0,0.7)" }}>
-            Where in Japan do you<br />want to ride?
-          </p>
+      {/* Desktop: a frosted panel at the top-left of the map */}
+      <section
+        aria-label="Classic rides"
+        className="absolute left-5 top-5 z-10 hidden max-h-[calc(100%-2.5rem)] w-[380px] flex-col gap-3 overflow-y-auto rounded-2xl border border-line bg-surface/90 p-4 shadow-float backdrop-blur-xl md:flex"
+      >
+        <div>
+          <p className="eyebrow text-ink-3">Classic rides 定番ルート</p>
+          <h2 className="mt-1 text-lg font-semibold tracking-tight text-ink">
+            Start from a proven road
+          </h2>
         </div>
-        <div className="pointer-events-auto">
-          <RegionPicker selected={selectedRegion} onSelect={setSelectedRegion} />
-        </div>
-      </div>
+        <Segmented
+          ariaLabel="Region"
+          options={REGION_OPTIONS}
+          value={selectedRegion}
+          onChange={setSelectedRegion}
+        />
+        <SeedRouteList routes={filteredRoutes} />
+      </section>
 
-      {/* Cards — desktop grid uses top-44 to clear the hero text above */}
-      <SeedRouteCards routes={filteredRoutes} desktopClassName="top-44 left-5" />
-
-      {/* Mobile: region picker above the card scroll strip */}
-      <div className="absolute md:hidden z-10 bottom-36 left-4 right-4">
-        <RegionPicker selected={selectedRegion} onSelect={setSelectedRegion} />
+      {/* Mobile: a swipeable strip above the Planner / Map control */}
+      <div className="absolute inset-x-0 bottom-20 z-10 md:hidden">
+        <SeedRouteList routes={filteredRoutes} layout="strip" />
       </div>
     </>
   );

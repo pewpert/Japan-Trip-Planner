@@ -1,149 +1,172 @@
 "use client";
 
-import { Settings2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTripStore } from "@/hooks/useTripStore";
+import { Disclosure } from "@/components/ui/Disclosure";
+import { Segmented } from "@/components/ui/Segmented";
+import { fieldClass } from "@/components/ui/Input";
+import { ROAD_MIX_LABEL, canUseExpressways } from "@/lib/costCalc";
+import type { RoadMix, TripSettings as TripSettingsType } from "@/types/trip";
 
-const BUDGET_LABELS = {
-  budget: "Budget (hostels, ~¥3,500/night)",
-  mid: "Mid-range (business hotel, ~¥8,000/night)",
-  luxury: "Luxury (ryokan, ~¥20,000/night)",
+const BUDGET_LABELS: Record<TripSettingsType["budget"], string> = {
+  budget: "Budget — hostel, ~¥3,500",
+  mid: "Mid-range — business hotel, ~¥8,000",
+  luxury: "Luxury — ryokan, ~¥20,000",
 };
 
-const inputClass =
-  "w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500";
+const BIKE_CLASSES = [
+  { value: 125, label: "125cc and under · no expressways" },
+  { value: 250, label: "126–250cc" },
+  { value: 400, label: "251–400cc · 普通二輪" },
+  { value: 750, label: "401cc and over · 大型二輪" },
+];
 
-export function TripSettings() {
-  const { settings, updateSettings } = useTripStore();
-  const [open, setOpen] = useState(false);
+const ROAD_MIX_OPTIONS = (Object.keys(ROAD_MIX_LABEL) as RoadMix[]).map((value) => ({
+  value,
+  label: ROAD_MIX_LABEL[value],
+}));
 
-  // String states so the fields can be fully cleared before typing a new number
-  const [fuelEfficiency, setFuelEfficiency] = useState(String(settings.fuelEfficiency));
-  const [fuelPrice, setFuelPrice] = useState(String(settings.fuelPricePerLiter));
+interface NumberFieldProps {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onCommit: (value: number) => void;
+}
 
-  // Keep local strings in sync if settings change externally (e.g. store rehydration)
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing local input state from the persisted store after rehydration
-  useEffect(() => { setFuelEfficiency(String(settings.fuelEfficiency)); }, [settings.fuelEfficiency]);
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing local input state from the persisted store after rehydration
-  useEffect(() => { setFuelPrice(String(settings.fuelPricePerLiter)); }, [settings.fuelPricePerLiter]);
+/**
+ * Numeric text field that can be fully cleared while typing. It commits a
+ * clamped value on blur; the parent re-keys it by value so an external change
+ * (such as the saved settings loading) resets what's shown.
+ */
+function NumberField({ label, value, min, max, onCommit }: NumberFieldProps) {
+  const [text, setText] = useState(String(value));
 
-  const handleFuelEfficiencyBlur = () => {
-    const n = parseFloat(fuelEfficiency);
-    if (isNaN(n) || n < 5) {
-      setFuelEfficiency("5");
-      updateSettings({ fuelEfficiency: 5 });
-    } else if (n > 50) {
-      setFuelEfficiency("50");
-      updateSettings({ fuelEfficiency: 50 });
-    } else {
-      setFuelEfficiency(String(n));
-      updateSettings({ fuelEfficiency: n });
-    }
-  };
-
-  const handleFuelPriceBlur = () => {
-    const n = parseFloat(fuelPrice);
-    if (isNaN(n) || n < 100) {
-      setFuelPrice("100");
-      updateSettings({ fuelPricePerLiter: 100 });
-    } else if (n > 300) {
-      setFuelPrice("300");
-      updateSettings({ fuelPricePerLiter: 300 });
-    } else {
-      setFuelPrice(String(n));
-      updateSettings({ fuelPricePerLiter: n });
-    }
+  const commit = () => {
+    const parsed = parseFloat(text);
+    const next = Number.isNaN(parsed) ? min : Math.min(max, Math.max(min, parsed));
+    setText(String(next));
+    onCommit(next);
   };
 
   return (
-    <div>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors w-full"
-      >
-        <Settings2 className="w-4 h-4" />
-        <span>Trip Settings</span>
-        <span className="ml-auto text-xs">{open ? "▲" : "▼"}</span>
-      </button>
+    <label className="flex min-w-0 flex-col gap-1.5">
+      <span className="eyebrow text-ink-3">{label}</span>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={text}
+        onChange={(e) => setText(e.target.value.replace(/[^0-9.]/g, ""))}
+        onBlur={commit}
+        className={`${fieldClass} num`}
+      />
+    </label>
+  );
+}
 
-      {open && (
-        <div className="mt-3 flex flex-col gap-4 border-t border-gray-100 dark:border-gray-700 pt-3">
-          {/* Fuel efficiency */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-              Fuel Efficiency (km/L)
-            </label>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={fuelEfficiency}
-              onChange={(e) => setFuelEfficiency(e.target.value.replace(/[^0-9.]/g, ""))}
-              onBlur={handleFuelEfficiencyBlur}
-              className={inputClass}
-              placeholder="22"
-            />
-            <p className="text-xs text-gray-400 dark:text-gray-500">Typical: 20–30 km/L for 250–600cc bikes</p>
-          </div>
+export function TripSettings() {
+  const { settings, updateSettings } = useTripStore();
+  const bikeClass = BIKE_CLASSES.find((c) => c.value === settings.bikeEngineCC) ?? BIKE_CLASSES[2];
+  const expresswayAllowed = canUseExpressways(settings.bikeEngineCC);
 
-          {/* Fuel price */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-              Fuel Price (¥/L)
-            </label>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={fuelPrice}
-              onChange={(e) => setFuelPrice(e.target.value.replace(/[^0-9.]/g, ""))}
-              onBlur={handleFuelPriceBlur}
-              className={inputClass}
-              placeholder="175"
-            />
-            <p className="text-xs text-gray-400 dark:text-gray-500">Current Japan average ~¥170–185/L</p>
-          </div>
+  return (
+    <Disclosure
+      title="Bike & trip settings"
+      summary={`${bikeClass.value >= 750 ? "401cc+" : bikeClass.value === 125 ? "≤125cc" : `${bikeClass.value}cc`} · ${settings.tankCapacityL} L · ${ROAD_MIX_LABEL[settings.roadMix]}`}
+    >
+      <div className="flex flex-col gap-5">
+        <label className="flex flex-col gap-1.5">
+          <span className="eyebrow text-ink-3">Bike</span>
+          <select
+            value={bikeClass.value}
+            onChange={(e) => updateSettings({ bikeEngineCC: Number(e.target.value) })}
+            className={fieldClass}
+          >
+            {BIKE_CLASSES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
-          {/* Engine CC */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-              Engine Size (cc)
-            </label>
-            <select
-              value={settings.bikeEngineCC}
-              onChange={(e) =>
-                updateSettings({ bikeEngineCC: Number(e.target.value) })
-              }
-              className={inputClass}
-            >
-              <option value={50}>Under 125cc (cheap tolls)</option>
-              <option value={250}>250–400cc</option>
-              <option value={400}>401–750cc</option>
-              <option value={750}>750cc+</option>
-            </select>
-          </div>
-
-          {/* Budget */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-              Accommodation Budget
-            </label>
-            <select
-              value={settings.budget}
-              onChange={(e) =>
-                updateSettings({
-                  budget: e.target.value as "budget" | "mid" | "luxury",
-                })
-              }
-              className={inputClass}
-            >
-              {Object.entries(BUDGET_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="grid grid-cols-3 gap-3">
+          <NumberField
+            key={`tank-${settings.tankCapacityL}`}
+            label="Tank (L)"
+            value={settings.tankCapacityL}
+            min={3}
+            max={40}
+            onCommit={(tankCapacityL) => updateSettings({ tankCapacityL })}
+          />
+          <NumberField
+            key={`eff-${settings.fuelEfficiency}`}
+            label="km / L"
+            value={settings.fuelEfficiency}
+            min={5}
+            max={50}
+            onCommit={(fuelEfficiency) => updateSettings({ fuelEfficiency })}
+          />
+          <NumberField
+            key={`price-${settings.fuelPricePerLiter}`}
+            label="¥ / L"
+            value={settings.fuelPricePerLiter}
+            min={100}
+            max={300}
+            onCommit={(fuelPricePerLiter) => updateSettings({ fuelPricePerLiter })}
+          />
         </div>
-      )}
-    </div>
+
+        <div className="flex flex-col gap-2">
+          <span className="eyebrow text-ink-3">Roads</span>
+          <Segmented
+            ariaLabel="Road mix"
+            options={ROAD_MIX_OPTIONS}
+            value={settings.roadMix}
+            onChange={(roadMix) => updateSettings({ roadMix })}
+          />
+          <p className="text-xs leading-relaxed text-ink-3">
+            Sets the share of expressway used for the toll estimate. Back roads also asks Google to
+            avoid expressways — re-plan the route to apply it.
+          </p>
+        </div>
+
+        <label
+          className={`flex items-start gap-3 rounded-xl border border-line p-3.5 ${
+            expresswayAllowed ? "cursor-pointer" : "cursor-not-allowed opacity-60"
+          }`}
+        >
+          <input
+            type="checkbox"
+            checked={settings.etcWeekendDiscount}
+            disabled={!expresswayAllowed}
+            onChange={(e) => updateSettings({ etcWeekendDiscount: e.target.checked })}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
+          />
+          <span>
+            <span className="block text-sm font-medium text-ink">Weekend ETC discount</span>
+            <span className="mt-0.5 block text-xs leading-relaxed text-ink-3">
+              I&apos;ve registered for NEXCO&apos;s 二輪車定率割引 — 37.5% off single runs over 80 km on
+              registered weekend days.
+            </span>
+          </span>
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="eyebrow text-ink-3">Lodging when staying over</span>
+          <select
+            value={settings.budget}
+            onChange={(e) => updateSettings({ budget: e.target.value as TripSettingsType["budget"] })}
+            className={fieldClass}
+          >
+            {Object.entries(BUDGET_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    </Disclosure>
   );
 }

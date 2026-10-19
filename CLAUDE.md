@@ -1,4 +1,4 @@
-# Japan Trip Planner — CLAUDE.md
+# Tōge 峠 (Japan motorcycle ride planner) — CLAUDE.md
 
 This file is the source of truth for all architectural decisions, conventions, and rules.
 Always read this before generating or modifying code.
@@ -7,7 +7,7 @@ Always read this before generating or modifying code.
 
 ## Project Overview
 
-A responsive web app for planning motorcycle trips in Japan.
+A responsive web app for planning motorcycle rides in Japan, written in English for riders who live in Japan (not a tourist guide).
 Built by Daniel (product owner, non-technical) with Claude as architect/engineer.
 
 **Current phase: Phase 1 MVP**
@@ -36,45 +36,32 @@ Built by Daniel (product owner, non-technical) with Claude as architect/engineer
 
 ```
 src/
-  app/                        # Next.js App Router pages
-    api/                      # Server-side API routes
-      route/                  # Route calculation endpoint
-      weather/                # Weather fetch endpoint
-      ai-suggest/             # Claude AI suggestions endpoint
-    page.tsx                  # Home / map page
-    layout.tsx                # Root layout
-    globals.css               # Global styles (minimal)
+  app/                        # App Router pages
+    api/route/                # Directions proxy (supports avoidHighways)
+    api/weather/              # Open-Meteo proxy (with elevation)
+    api/ai-suggest/           # Claude itinerary endpoint (ANTHROPIC_MOCK=true for a sample)
+    print/page.tsx            # Printable ride document
   components/
-    map/                      # Map-related components
-      TripMap.tsx             # Main Google Map component
-      RouteLayer.tsx          # Draws route polyline on map
-      MarkerCluster.tsx       # POI markers
-    planner/                  # Trip planning UI
-      PlannerSidebar.tsx      # Left sidebar: inputs, controls
-      RouteInputs.tsx         # Start/end/waypoint inputs
-      CostEstimator.tsx       # Fuel, toll, accommodation costs
-      WeatherStrip.tsx        # Weather along route
-      POIList.tsx             # Points of interest list
-    ui/                       # Generic reusable UI components
-      Button.tsx
-      Card.tsx
-      Input.tsx
-      LoadingSpinner.tsx
+    map/                      # TripMap, EmptyStatePanel, SeedRouteCards, POI layer + toggle + info panel
+    planner/                  # PlannerSidebar, RouteInputs, RideBriefing, WeatherStrip, RideIntel,
+                              # FuelPlan, CostEstimator, StopsPanel, TripSettings, PreRideCheck,
+                              # ItineraryPlanner, DayView, DayDetailCard, SummaryTab, TripExportButton
+    print/                    # PrintLayout
+    ui/                       # Button, Card, Input, Pill, Segmented, Disclosure, Tooltip, ...
   lib/
-    googleMaps.ts             # Google Maps API helpers
-    weather.ts                # Open-Meteo API helpers
-    costCalc.ts               # Cost calculation logic
-    storage.ts                # localStorage read/write helpers
-    claudeAI.ts               # Claude API call helpers
-  hooks/
-    useRoute.ts               # Hook: fetch and manage route data
-    useWeather.ts             # Hook: fetch weather for route
-    useTripStore.ts           # Zustand store definition
-  types/
-    trip.ts                   # TypeScript types for trip data
-    route.ts                  # Types for route/waypoint data
-    weather.ts                # Types for weather data
+    costCalc.ts               # fuel + toll model (motorcycle class, road mix, ETC discount)
+    ridePlan.ts               # JST day helpers, sunset, timeline, fuel plan
+    advisories.ts             # verdict + ride-intel rules (the "ride briefing" brain)
+    brand.ts                  # product name in one place
+    weather.ts, routeApi.ts, tripExport.ts, breakInterpolation.ts, poiFilter.ts
+  hooks/                      # useTripStore (Zustand), useRidePlan, useSeedRoute, useWeather
+  data/                       # seedRoutes, seedItineraries, bikerPOIs, poiCategories
+  types/                      # trip, route, weather, ride
 ```
+
+Design tokens live in `globals.css` (semantic names such as `bg-surface`, `text-ink-2`,
+`bg-accent`, `text-warn`); components should not use per-component `dark:` pairs.
+Single typeface (Instrument Sans) with system Japanese fallbacks.
 
 ---
 
@@ -115,6 +102,8 @@ No prefix = server-side only (never exposed to browser).
 - **Rest stops**: "Michi-no-Eki" (道の駅) are official roadside stations — excellent for breaks, local food, free parking.
 - **Laws**: International Driving Permit (IDP) required for foreign riders. Helmets mandatory. No lane splitting.
 - **Avoid**: Tokyo, Osaka, Kyoto city centers — focus on rural/regional routes.
+- **Bikes ≤125cc**: not allowed on expressways; routing must avoid highways. Motorcycles pay the 軽自動車等 toll class (0.8× car).
+- **Audience**: residents who already hold a Japanese licence. Do not add tourist content (IDP, rental, insurance walkthroughs).
 
 ---
 

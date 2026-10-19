@@ -10,8 +10,8 @@ const TripMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex-1 flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <LoadingSpinner size="lg" label="Loading map..." />
+      <div className="flex flex-1 items-center justify-center bg-surface-2">
+        <LoadingSpinner size="lg" label="Loading map…" />
       </div>
     ),
   }

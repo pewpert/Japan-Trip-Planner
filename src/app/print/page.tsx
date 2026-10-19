@@ -39,7 +39,7 @@ export default function PrintPage() {
     return (
       <div className="flex items-center justify-center min-h-screen text-center p-8">
         <div>
-          <p className="text-2xl mb-2">🏍️</p>
+          <p className="text-2xl mb-2 font-semibold">峠</p>
           <p className="font-semibold text-gray-700">No trip data found.</p>
           <p className="text-sm text-gray-500 mt-1">
             Open this page from the Summary tab in the planner.
@@ -58,7 +58,7 @@ export default function PrintPage() {
   if (!data) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-sm text-gray-400 animate-pulse">Preparing your trip document…</p>
+        <p className="text-sm text-gray-400 animate-pulse">Preparing your ride plan…</p>
       </div>
     );
   }

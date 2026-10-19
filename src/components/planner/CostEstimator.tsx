@@ -1,9 +1,15 @@
 "use client";
 
-import { Fuel, CreditCard, Building2, TrendingUp } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
-import { SectionHeading } from "@/components/ui/SectionHeading";
-import { formatJPY, formatDuration, calculateTripCostRange } from "@/lib/costCalc";
+import { Disclosure } from "@/components/ui/Disclosure";
+import {
+  calculateTripCostRange,
+  describeTollAssumptions,
+  formatJPY,
+} from "@/lib/costCalc";
+
+const DRIVE_PLAZA = "https://www.driveplaza.com/";
 
 export function CostEstimator() {
   const { costBreakdown, route, settings } = useTripStore();
@@ -11,82 +17,76 @@ export function CostEstimator() {
   if (!costBreakdown || !route) return null;
 
   const range = calculateTripCostRange(route.distanceKm, route.durationMinutes, settings);
+  const rideLow = range.low.fuel + range.low.tolls;
+  const rideHigh = range.high.fuel + range.high.tolls;
+  const liters = route.distanceKm / settings.fuelEfficiency;
 
-  const items = [
+  const rows = [
     {
-      icon: <Fuel className="w-4 h-4" />,
       label: "Fuel",
+      detail: `≈ ${liters.toFixed(1)} L at ¥${settings.fuelPricePerLiter}/L`,
       low: range.low.fuel,
       high: range.high.fuel,
-      sub: `~${(route.distanceKm / settings.fuelEfficiency).toFixed(1)}L`,
-      color: "text-orange-600 bg-orange-50 dark:bg-orange-900/30",
     },
     {
-      icon: <CreditCard className="w-4 h-4" />,
-      label: "Tolls (est.)",
+      label: "Expressway tolls",
+      detail: describeTollAssumptions(settings),
       low: range.low.tolls,
       high: range.high.tolls,
-      sub: "expressway approx.",
-      color: "text-blue-600 bg-blue-50 dark:bg-blue-900/30",
-    },
-    {
-      icon: <Building2 className="w-4 h-4" />,
-      label: "Accommodation",
-      low: range.low.accommodation,
-      high: range.high.accommodation,
-      sub: "1 night stay",
-      color: "text-purple-600 bg-purple-50 dark:bg-purple-900/30",
     },
   ];
 
   return (
-    <div className="flex flex-col gap-3">
-      <SectionHeading>Cost Estimate</SectionHeading>
-
-      {/* Route summary */}
-      <div className="flex gap-3 text-sm text-gray-600 dark:text-gray-300">
-        <span className="font-medium">{route.distanceKm.toFixed(0)} km</span>
-        <span>·</span>
-        <span>{formatDuration(route.durationMinutes)}</span>
-      </div>
-
-      {/* Cost rows */}
-      <div className="flex flex-col gap-2">
-        {items.map((item) => (
-          <div key={item.label} className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className={`p-1.5 rounded-lg ${item.color}`}>{item.icon}</div>
-              <div>
-                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{item.label}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">{item.sub}</p>
+    <Disclosure
+      title="Cost estimate"
+      summary={`${formatJPY(rideLow)} – ${formatJPY(rideHigh)}`}
+    >
+      <div className="flex flex-col gap-4">
+        <ul className="flex flex-col gap-3">
+          {rows.map((row) => (
+            <li key={row.label} className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-ink">{row.label}</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-ink-3">{row.detail}</p>
               </div>
-            </div>
-            <span className="text-sm font-semibold text-gray-900 dark:text-white tabular-nums">
-              {formatJPY(item.low)} – {formatJPY(item.high)}
-            </span>
-          </div>
-        ))}
-      </div>
+              <p className="num shrink-0 text-sm font-medium text-ink">
+                {formatJPY(row.low)} – {formatJPY(row.high)}
+              </p>
+            </li>
+          ))}
+        </ul>
 
-      {/* Total */}
-      <div className="border-t border-gray-100 dark:border-gray-700 pt-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg text-red-600 bg-red-50 dark:bg-red-900/30">
-            <TrendingUp className="w-4 h-4" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Per-leg estimate</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500">fuel + tolls for this leg · 1 night stay</p>
-          </div>
+        <div className="flex items-baseline justify-between gap-4 border-t border-line pt-3">
+          <p className="text-sm font-semibold text-ink">Ride cost</p>
+          <p className="num text-base font-semibold text-accent">
+            {formatJPY(rideLow)} – {formatJPY(rideHigh)}
+          </p>
         </div>
-        <span className="text-base font-bold text-red-600 tabular-nums">
-          {formatJPY(range.low.total)} – {formatJPY(range.high.total)}
-        </span>
-      </div>
 
-      <p className="text-xs text-gray-400 dark:text-gray-500">
-        * Estimates only. Actual costs vary by route and availability.
-      </p>
-    </div>
+        <div className="flex items-baseline justify-between gap-4 rounded-xl bg-surface-2 px-3.5 py-3">
+          <div>
+            <p className="text-[13px] font-medium text-ink-2">If you stay over</p>
+            <p className="text-xs text-ink-3">1 night, {settings.budget} budget</p>
+          </div>
+          <p className="num text-[13px] font-medium text-ink-2">
+            + {formatJPY(range.low.accommodation)} – {formatJPY(range.high.accommodation)}
+          </p>
+        </div>
+
+        <p className="text-xs leading-relaxed text-ink-3">
+          Estimates only. City expressways (首都高, 阪神高速) use flat fees that aren&apos;t modelled —
+          check the exact toll on{" "}
+          <a
+            href={DRIVE_PLAZA}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-0.5 font-medium text-accent hover:underline"
+          >
+            ドラぷら <ExternalLink className="h-3 w-3" aria-hidden />
+          </a>
+          .
+        </p>
+      </div>
+    </Disclosure>
   );
 }

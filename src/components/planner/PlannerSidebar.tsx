@@ -4,19 +4,27 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, Sun, Moon, Map as MapIcon, ClipboardList } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
 import { useWeather } from "@/hooks/useWeather";
-import { RouteInputs } from "./RouteInputs";
-import { WeatherStrip } from "./WeatherStrip";
-import { CostEstimator } from "./CostEstimator";
-import { TripSettings } from "./TripSettings";
-import { ItineraryPlanner } from "./ItineraryPlanner";
-import { RouteOverviewPanel } from "./RouteOverviewPanel";
-import { SummaryTab } from "./SummaryTab";
+import { BRAND } from "@/lib/brand";
+import { BrandMark } from "@/components/ui/BrandMark";
 import { Card } from "@/components/ui/Card";
+import { SectionHeading } from "@/components/ui/SectionHeading";
+import { SeedRouteList } from "@/components/map/SeedRouteCards";
+import { RouteInputs } from "./RouteInputs";
+import { RideBriefing } from "./RideBriefing";
+import { WeatherStrip } from "./WeatherStrip";
+import { RideIntel } from "./RideIntel";
+import { FuelPlan } from "./FuelPlan";
+import { CostEstimator } from "./CostEstimator";
+import { StopsPanel } from "./StopsPanel";
+import { TripSettings } from "./TripSettings";
+import { PreRideCheck } from "./PreRideCheck";
+import { ItineraryPlanner } from "./ItineraryPlanner";
+import { SummaryTab } from "./SummaryTab";
 
 type Tab = "route" | "itinerary" | "summary";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "route", label: "Route Planner" },
+  { id: "route", label: "Plan" },
   { id: "itinerary", label: "Itinerary" },
   { id: "summary", label: "Summary" },
 ];
@@ -30,41 +38,26 @@ interface TabButtonProps {
 function TabButton({ label, active, onClick }: TabButtonProps) {
   return (
     <button
+      role="tab"
+      aria-selected={active}
       onClick={onClick}
-      className={`relative flex-1 pb-2.5 text-sm transition-colors
-        ${active
-          ? "font-semibold text-red-600"
-          : "font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-        }`}
+      className={`relative flex-1 pb-3 text-sm font-medium transition-colors ${
+        active ? "text-ink" : "text-ink-3 hover:text-ink-2"
+      }`}
     >
       {label}
-      {/* Animated underline */}
       <span
         aria-hidden
-        className={`absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-red-600 transition-all duration-200
-          ${active ? "opacity-100 scale-x-100" : "opacity-0 scale-x-50"}`}
+        className={`absolute inset-x-4 -bottom-px h-0.5 rounded-full bg-accent transition-opacity duration-200 ${
+          active ? "opacity-100" : "opacity-0"
+        }`}
       />
     </button>
   );
 }
 
-/** Torii-gate brand mark — the app's visual signature */
-function ToriiMark({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden fill="currentColor">
-      {/* kasagi — curved top beam */}
-      <path d="M2.5 8.5 Q16 4.5 29.5 8.5 L28.5 12 L3.5 12 Z" />
-      {/* nuki — tie beam */}
-      <rect x="6" y="16" width="20" height="2.8" rx="0.6" />
-      {/* pillars, slightly splayed */}
-      <path d="M7.2 12 L10.4 12 L11.6 28.5 L8 28.5 Z" />
-      <path d="M21.6 12 L24.8 12 L24 28.5 L20.4 28.5 Z" />
-    </svg>
-  );
-}
-
 export function PlannerSidebar() {
-  const { isSidebarOpen, toggleSidebar, route, isDarkMode, toggleDarkMode } = useTripStore();
+  const { isSidebarOpen, toggleSidebar, route, itinerary, isDarkMode, toggleDarkMode } = useTripStore();
   const [activeTab, setActiveTab] = useState<Tab>("route");
 
   // Keep weather in sync with the current route (fetches once per route change)
@@ -81,43 +74,41 @@ export function PlannerSidebar() {
     <>
       {/* Sidebar panel */}
       <div
-        className={`
-          relative flex flex-col bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700
-          transition-all duration-300 ease-in-out overflow-hidden
-          ${isSidebarOpen ? "w-full md:w-96 min-w-0 md:min-w-96" : "w-0 md:w-0"}
-        `}
+        className={`relative flex flex-col overflow-hidden border-r border-line bg-canvas transition-all duration-300 ease-in-out ${
+          isSidebarOpen ? "w-full min-w-0 md:w-[420px] md:min-w-[420px]" : "w-0 md:w-0"
+        }`}
       >
-        <div className="flex flex-col gap-4 p-4 pb-20 md:pb-4 overflow-y-auto h-full">
+        {/* shrink-0 on children: in a scrolling flex column, overflow-hidden cards would otherwise collapse */}
+        <div className="flex h-full flex-col gap-5 overflow-y-auto p-5 pb-24 md:pb-6 [&>*]:shrink-0">
           {/* Header */}
-          <div className="flex items-center gap-3">
-            <ToriiMark className="w-11 h-11 text-red-600 shrink-0 drop-shadow-sm" />
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-bold tracking-tight leading-tight text-balance text-gray-900 dark:text-white">
-                Japan <span className="text-red-600">バイク</span> Trip Planner
+          <header className="flex items-center gap-3">
+            <BrandMark className="h-9 w-9 shrink-0 text-accent" />
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl font-semibold leading-none tracking-tight text-ink">
+                {BRAND.name} <span className="font-normal text-ink-3">{BRAND.kanji}</span>
               </h1>
-              <p className="hidden sm:block text-xs tracking-wide text-gray-500 dark:text-gray-400">Discover rural Japan by motorcycle</p>
+              <p className="mt-1 text-xs text-ink-3">{BRAND.descriptor}</p>
             </div>
             {/* Mobile: jump to the map */}
             <button
               onClick={closeSidebar}
-              className="md:hidden flex items-center gap-0.5 text-xs font-medium text-red-600 shrink-0 p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              className="flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-2 text-[13px] font-medium text-accent transition-colors hover:bg-surface-2 md:hidden"
             >
-              View map
-              <ChevronRight className="w-3.5 h-3.5" />
+              Map
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden />
             </button>
-            {/* Dark mode toggle */}
             <button
               onClick={toggleDarkMode}
-              className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors shrink-0"
+              className="shrink-0 rounded-lg p-2 text-ink-3 transition-colors hover:bg-surface-2 hover:text-ink"
               aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
               title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {isDarkMode ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
             </button>
-          </div>
+          </header>
 
           {/* Tab bar */}
-          <div className="flex border-b border-gray-200 dark:border-gray-700 -mx-4 px-4">
+          <div role="tablist" className="-mx-5 flex border-b border-line px-5">
             {TABS.map((tab) => (
               <TabButton
                 key={tab.id}
@@ -128,98 +119,94 @@ export function PlannerSidebar() {
             ))}
           </div>
 
-          {/* Onboarding nudge */}
-          <p className="text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 -mt-2 border-l-2 border-red-600/40 pl-2.5">
-            New here? Generate a trip in <span className="font-medium text-gray-700 dark:text-gray-200">Itinerary</span>, review it in <span className="font-medium text-gray-700 dark:text-gray-200">Summary</span>, then export or print.
-          </p>
-
-          {/* Route tab content */}
+          {/* Plan tab */}
           {activeTab === "route" && (
             <>
-              <Card padding="md">
-                <RouteInputs />
-              </Card>
+              {!route && !itinerary && (
+                <p className="text-[13px] leading-relaxed text-ink-3">
+                  Plan a route below, or build a multi-day trip in{" "}
+                  <button
+                    onClick={() => setActiveTab("itinerary")}
+                    className="font-medium text-accent hover:underline"
+                  >
+                    Itinerary
+                  </button>
+                  , review it in Summary, then print it.
+                </p>
+              )}
+
+              <RouteInputs />
 
               {route && (
                 <>
-                  <Card padding="md">
-                    <RouteOverviewPanel />
-                  </Card>
+                  <RideBriefing />
                   <WeatherStrip />
-                  <Card padding="md">
-                    <CostEstimator />
-                  </Card>
+                  <RideIntel />
+                  <FuelPlan />
+                  <CostEstimator />
+                  <StopsPanel />
                 </>
               )}
 
-              <Card padding="md">
-                <TripSettings />
-              </Card>
+              {/* Phones can't see the map's classic rides until they switch views, so offer them here */}
+              {!route && (
+                <Card className="flex flex-col gap-1 md:hidden">
+                  <SectionHeading>Classic rides · 定番ルート</SectionHeading>
+                  <SeedRouteList />
+                </Card>
+              )}
 
-              <Card padding="sm">
-                <div className="flex flex-col gap-1">
-                  <p className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Quick Tips</p>
-                  <ul className="text-[13px] leading-relaxed text-gray-600 dark:text-gray-400 space-y-1.5 list-disc list-inside">
-                    <li>Look for 道の駅 (Michi-no-Eki) for free rest stops</li>
-                    <li>Mountain passes may close Nov–Apr due to snow</li>
-                    <li>You need an IDP to ride as a foreign visitor</li>
-                    <li>Helmets are mandatory by law</li>
-                  </ul>
-                </div>
-              </Card>
+              <TripSettings />
+
+              {!route && <PreRideCheck />}
             </>
           )}
 
-          {/* Itinerary tab content */}
           {activeTab === "itinerary" && (
             <ItineraryPlanner onSwitchToRoute={() => setActiveTab("route")} />
           )}
 
-          {/* Summary tab content */}
-          {activeTab === "summary" && (
-            <SummaryTab />
-          )}
+          {activeTab === "summary" && <SummaryTab />}
         </div>
       </div>
 
-      {/* Desktop sidebar toggle button */}
+      {/* Desktop sidebar toggle */}
       <button
         onClick={toggleSidebar}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-r-lg p-1.5 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors hidden md:flex"
-        style={{ left: isSidebarOpen ? "384px" : "0px" }}
+        className={`absolute top-1/2 z-10 hidden -translate-y-1/2 rounded-r-lg border border-l-0 border-line bg-surface p-1.5 text-ink-2 shadow-sm transition-[left,colors] duration-300 hover:bg-surface-2 md:flex ${
+          isSidebarOpen ? "md:left-[420px]" : "md:left-0"
+        }`}
         aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
       >
-        {isSidebarOpen ? (
-          <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-        ) : (
-          <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-        )}
+        {isSidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
       </button>
 
       {/* Mobile: Planner / Map segmented control */}
-      <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-30 flex bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-full shadow-lg shadow-gray-900/10 overflow-hidden">
+      <div
+        role="tablist"
+        aria-label="Switch between planner and map"
+        className="fixed bottom-4 left-1/2 z-30 flex -translate-x-1/2 overflow-hidden rounded-full border border-line bg-surface/90 shadow-float backdrop-blur-xl md:hidden"
+      >
         <button
+          role="tab"
+          aria-selected={isSidebarOpen}
           onClick={openSidebar}
-          aria-pressed={isSidebarOpen}
-          className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors
-            ${isSidebarOpen
-              ? "bg-red-600 text-white"
-              : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            }`}
+          className={`flex items-center gap-1.5 px-5 py-2.5 text-sm font-medium transition-colors ${
+            isSidebarOpen ? "bg-accent text-on-accent" : "text-ink-2 hover:bg-surface-2"
+          }`}
         >
-          <ClipboardList className="w-4 h-4" />
+          <ClipboardList className="h-4 w-4" aria-hidden />
           Planner
         </button>
         <button
+          role="tab"
+          aria-selected={!isSidebarOpen}
           onClick={closeSidebar}
-          aria-pressed={!isSidebarOpen}
-          className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors
-            ${!isSidebarOpen
-              ? "bg-red-600 text-white"
-              : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            }`}
+          className={`flex items-center gap-1.5 px-5 py-2.5 text-sm font-medium transition-colors ${
+            !isSidebarOpen ? "bg-accent text-on-accent" : "text-ink-2 hover:bg-surface-2"
+          }`}
         >
-          <MapIcon className="w-4 h-4" />
+          <MapIcon className="h-4 w-4" aria-hidden />
           Map
         </button>
       </div>

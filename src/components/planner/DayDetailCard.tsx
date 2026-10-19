@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { Bike, MapPin, AlertTriangle, ParkingSquare } from "lucide-react";
+import { BedDouble, ChevronDown, MapPin, ParkingSquare, TriangleAlert } from "lucide-react";
 import { formatDuration } from "@/lib/costCalc";
+import { Pill } from "@/components/ui/Pill";
 import type { ItineraryDay } from "@/types/trip";
 
-export const ACCOMMODATION_ICONS: Record<ItineraryDay["accommodation"]["type"], string> = {
-  hotel: "🏨",
-  ryokan: "🎎",
-  guesthouse: "🏠",
-  camping: "⛺",
+const ACCOMMODATION_LABELS: Record<ItineraryDay["accommodation"]["type"], string> = {
+  hotel: "Hotel",
+  ryokan: "Ryokan 旅館",
+  guesthouse: "Guesthouse",
+  camping: "Camping",
 };
 
 interface DayDetailCardProps {
@@ -20,8 +21,6 @@ interface DayDetailCardProps {
   showSchedule?: boolean;
   /** Show the motorcycle-parking indicator on the accommodation block */
   showAccommodationParking?: boolean;
-  /** Add print-friendly color overrides (used by Summary / print views) */
-  print?: boolean;
   /** Screen-specific extras rendered at the bottom of the card */
   children?: ReactNode;
 }
@@ -36,54 +35,39 @@ export function DayDetailCard({
   showRoute = false,
   showSchedule = false,
   showAccommodationParking = false,
-  print = false,
   children,
 }: DayDetailCardProps) {
   const [scheduleExpanded, setScheduleExpanded] = useState(false);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {/* Day header */}
-      <div className="flex items-start gap-2">
-        <div className={`p-1.5 bg-red-50 dark:bg-red-900/30 rounded-lg shrink-0 ${print ? "print:bg-red-50" : ""}`}>
-          <Bike className="w-4 h-4 text-red-600" />
-        </div>
-        <div>
-          <p className="text-[11px] font-bold text-red-600 uppercase tracking-wider">Day {day.day}</p>
-          <p className={`text-[15px] font-semibold text-gray-900 dark:text-white leading-snug ${print ? "print:text-black" : ""}`}>
-            {day.title}
-          </p>
-        </div>
+      <div>
+        <p className="eyebrow text-accent">Day {day.day}</p>
+        <h3 className="mt-0.5 text-[15px] font-semibold leading-snug text-ink">{day.title}</h3>
       </div>
 
-      {/* Route line */}
       {showRoute && (
-        <div className={`flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 ${print ? "print:text-gray-600" : ""}`}>
-          <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+        <div className="flex items-center gap-2 text-[13px] text-ink-2">
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-ink-3" aria-hidden />
           <span className="truncate">{day.startLocation}</span>
-          <span className="text-gray-400 shrink-0">→</span>
+          <span className="shrink-0 text-ink-3" aria-hidden>→</span>
           <span className="truncate">{day.endLocation}</span>
         </div>
       )}
 
-      {/* Distance + riding time badges */}
-      <div className="flex gap-2 flex-wrap">
-        <span className={`text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full font-medium ${print ? "print:bg-gray-100 print:text-gray-700" : ""}`}>
-          {day.distanceKm} km
-        </span>
-        <span className={`text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full font-medium ${print ? "print:bg-gray-100 print:text-gray-700" : ""}`}>
-          {formatDuration(day.ridingTimeMinutes)} riding
-        </span>
+      <div className="flex flex-wrap gap-2">
+        <Pill className="num">{day.distanceKm} km</Pill>
+        <Pill className="num">{formatDuration(day.ridingTimeMinutes)} riding</Pill>
       </div>
 
-      {/* Key stops */}
       {day.keyStops.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Key Stops</p>
-          <ul className="flex flex-col gap-0.5">
+          <p className="eyebrow mb-1.5 text-ink-3">Key stops</p>
+          <ul className="flex flex-col gap-1">
             {day.keyStops.map((stop, i) => (
-              <li key={i} className={`flex items-start gap-1.5 text-[13px] leading-relaxed text-gray-600 dark:text-gray-300 ${print ? "print:text-gray-700" : ""}`}>
-                <MapPin className="w-3 h-3 text-red-400 shrink-0 mt-1" />
+              <li key={i} className="flex items-start gap-2 text-[13px] leading-relaxed text-ink-2">
+                <MapPin className="mt-1 h-3 w-3 shrink-0 text-accent" aria-hidden />
                 {stop}
               </li>
             ))}
@@ -92,34 +76,31 @@ export function DayDetailCard({
       )}
 
       {/* Accommodation */}
-      <div className={`flex items-start gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2 ${print ? "print:bg-gray-50" : ""}`}>
-        <span className="text-base leading-none mt-0.5">
-          {ACCOMMODATION_ICONS[day.accommodation.type] ?? "🏨"}
-        </span>
-        <div>
-          <p className={`text-[13px] font-medium text-gray-900 dark:text-white ${print ? "print:text-black" : ""}`}>
-            {day.accommodation.name}
-          </p>
+      <div className="flex items-start gap-3 rounded-xl bg-surface-2 px-3.5 py-3">
+        <BedDouble className="mt-0.5 h-4 w-4 shrink-0 text-ink-3" aria-hidden />
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium text-ink">{day.accommodation.name}</p>
+          <p className="text-xs text-ink-3">{ACCOMMODATION_LABELS[day.accommodation.type]}</p>
           {showAccommodationParking ? (
-            <div className="flex items-center gap-1 mt-0.5">
-              <ParkingSquare className={`w-3 h-3 shrink-0 ${day.accommodation.hasMotorcycleParking ? "text-green-600" : "text-gray-400"}`} />
-              <p className="text-xs text-gray-500 dark:text-gray-400">{day.accommodation.parkingNote}</p>
+            <div className="mt-1 flex items-start gap-1.5">
+              <ParkingSquare
+                className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${
+                  day.accommodation.hasMotorcycleParking ? "text-go" : "text-ink-3"
+                }`}
+                aria-hidden
+              />
+              <p className="text-xs leading-relaxed text-ink-2">{day.accommodation.parkingNote}</p>
             </div>
           ) : (
-            <p className={`text-xs text-gray-500 dark:text-gray-400 ${print ? "print:text-gray-600" : ""}`}>
-              {day.accommodation.parkingNote}
-            </p>
+            <p className="mt-1 text-xs leading-relaxed text-ink-2">{day.accommodation.parkingNote}</p>
           )}
         </div>
       </div>
 
-      {/* Seasonal warning */}
       {day.seasonalWarning && (
-        <div className="flex items-start gap-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg px-3 py-2">
-          <AlertTriangle className="w-3.5 h-3.5 text-orange-500 shrink-0 mt-0.5" />
-          <p className={`text-[13px] leading-relaxed text-orange-700 dark:text-orange-400 ${print ? "print:text-orange-700" : ""}`}>
-            {day.seasonalWarning}
-          </p>
+        <div className="flex items-start gap-2.5 rounded-xl bg-warn-soft px-3.5 py-3">
+          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warn" aria-hidden />
+          <p className="text-[13px] leading-relaxed text-warn">{day.seasonalWarning}</p>
         </div>
       )}
 
@@ -128,32 +109,31 @@ export function DayDetailCard({
         <div>
           <button
             onClick={() => setScheduleExpanded((prev) => !prev)}
-            className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+            aria-expanded={scheduleExpanded}
+            className="flex items-center gap-1 text-[13px] font-medium text-accent hover:underline"
           >
-            {scheduleExpanded ? "Hide schedule ▲" : "Show schedule ▼"}
+            {scheduleExpanded ? "Hide schedule" : "Show schedule"}
+            <ChevronDown
+              className={`h-3.5 w-3.5 transition-transform ${scheduleExpanded ? "rotate-180" : ""}`}
+              aria-hidden
+            />
           </button>
           {scheduleExpanded && (
-            <div className="mt-2 flex flex-col">
+            <ol className="mt-3 flex flex-col">
               {day.schedule.map((entry, i) => (
-                <div key={i} className="flex gap-3">
+                <li key={i} className="flex gap-3">
                   {/* Vertical line + dot connector */}
-                  <div className="flex flex-col items-center shrink-0">
-                    <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-500 mt-1 shrink-0" />
-                    {i < day.schedule!.length - 1 && (
-                      <div className="w-px flex-1 bg-gray-200 dark:bg-gray-600 my-0.5" />
-                    )}
+                  <div className="flex shrink-0 flex-col items-center">
+                    <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                    {i < day.schedule!.length - 1 && <div className="my-0.5 w-px flex-1 bg-line" />}
                   </div>
-                  <div className="flex gap-2 pb-2 min-w-0">
-                    <span className="text-xs font-mono text-gray-400 dark:text-gray-500 shrink-0 tabular-nums">
-                      {entry.time}
-                    </span>
-                    <span className="text-[13px] text-gray-700 dark:text-gray-300 leading-relaxed">
-                      {entry.activity}
-                    </span>
+                  <div className="flex min-w-0 gap-3 pb-2.5">
+                    <span className="num w-11 shrink-0 text-xs font-medium text-ink-3">{entry.time}</span>
+                    <span className="text-[13px] leading-relaxed text-ink-2">{entry.activity}</span>
                   </div>
-                </div>
+                </li>
               ))}
-            </div>
+            </ol>
           )}
         </div>
       )}

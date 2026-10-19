@@ -1,171 +1,91 @@
 "use client";
 
-import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { SEED_ROUTES, type SeedRoute } from "@/data/seedRoutes";
-import { SEED_ITINERARIES } from "@/data/seedItineraries";
-import { useTripStore } from "@/hooks/useTripStore";
-import { planRoute } from "@/lib/routeApi";
+import { useSeedRoute } from "@/hooks/useSeedRoute";
 import { Tooltip } from "@/components/ui/Tooltip";
 
-const DIFFICULTY_STYLES = {
-  beginner: { dot: "bg-green-400", bar: "border-l-green-400", label: "Beginner" },
-  intermediate: { dot: "bg-yellow-400", bar: "border-l-yellow-400", label: "Intermediate" },
-  advanced: { dot: "bg-red-400", bar: "border-l-red-400", label: "Advanced" },
-};
+const DIFFICULTY = {
+  beginner: { dot: "bg-go", label: "Beginner" },
+  intermediate: { dot: "bg-warn", label: "Intermediate" },
+  advanced: { dot: "bg-stop", label: "Advanced" },
+} as const;
 
-interface SeedRouteCardsProps {
+interface SeedRouteListProps {
   routes?: SeedRoute[];
-  desktopClassName?: string;
+  /** "list": hairline-separated rows. "strip": separate cards for a horizontal scroller. */
+  layout?: "list" | "strip";
 }
 
-export function SeedRouteCards({ routes = SEED_ROUTES, desktopClassName = "top-4 left-4" }: SeedRouteCardsProps) {
-  const {
-    setOrigin,
-    setDestination,
-    addWaypoint,
-    clearRoute,
-    setRoute,
-    setCostBreakdown,
-    setSuggestedBreaks,
-    setLoadingRoute,
-    setItinerary,
-    setRouteError,
-    settings,
-  } = useTripStore();
-
-  const [loadingId, setLoadingId] = useState<string | null>(null);
-
-  const handleLoadRoute = async (seed: SeedRoute) => {
-    if (loadingId) return;
-
-    // Populate store inputs
-    clearRoute();
-    setOrigin(seed.origin);
-    setDestination(seed.destination);
-    seed.waypoints.forEach((wp) => addWaypoint(wp));
-
-    setLoadingId(seed.id);
-
-    await planRoute({
-      origin: seed.origin,
-      destination: seed.destination,
-      waypoints: seed.waypoints,
-      settings,
-      onStart: () => setLoadingRoute(true),
-      onSuccess: (route, cost, breaks) => {
-        setRoute(route);
-        setCostBreakdown(cost);
-        setSuggestedBreaks(breaks);
-        // Load the static seed itinerary so Summary tab is immediately populated
-        const seedItinerary = SEED_ITINERARIES[seed.id];
-        if (seedItinerary) setItinerary(seedItinerary);
-      },
-      onError: (msg) => {
-        setRouteError(`Couldn't plan "${seed.name}": ${msg}`);
-      },
-      onFinally: () => {
-        setLoadingRoute(false);
-        setLoadingId(null);
-      },
-    });
-  };
+export function SeedRouteList({ routes = SEED_ROUTES, layout = "list" }: SeedRouteListProps) {
+  const { load, loadingId } = useSeedRoute();
 
   return (
-    <>
-      {/* Desktop: 2×2 grid top-left */}
-      <div className={`absolute ${desktopClassName} hidden md:grid grid-cols-2 gap-3 max-w-sm z-10`}>
-        {routes.map((seed) => (
-          <SeedCard
-            key={seed.id}
+    <ul
+      className={
+        layout === "strip"
+          ? "flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1"
+          : "flex flex-col divide-y divide-line"
+      }
+    >
+      {routes.map((seed) => (
+        <li key={seed.id} className={layout === "strip" ? "w-[268px] shrink-0 snap-start" : ""}>
+          <SeedRow
             seed={seed}
+            card={layout === "strip"}
             loading={loadingId === seed.id}
             disabled={loadingId !== null}
-            onLoad={() => handleLoadRoute(seed)}
+            onLoad={() => load(seed)}
           />
-        ))}
-      </div>
-
-      {/* Mobile: horizontal scroll row at bottom */}
-      <div className="absolute bottom-16 left-0 right-0 flex gap-3 overflow-x-auto px-4 snap-x snap-mandatory z-10 md:hidden pb-1">
-        {routes.map((seed) => (
-          <div key={seed.id} className="shrink-0 w-56 snap-start">
-            <SeedCard
-              seed={seed}
-              loading={loadingId === seed.id}
-              disabled={loadingId !== null}
-              onLoad={() => handleLoadRoute(seed)}
-            />
-          </div>
-        ))}
-      </div>
-    </>
+        </li>
+      ))}
+    </ul>
   );
 }
 
-interface SeedCardProps {
+interface SeedRowProps {
   seed: SeedRoute;
+  card: boolean;
   loading: boolean;
   disabled: boolean;
   onLoad: () => void;
 }
 
-function SeedCard({ seed, loading, disabled, onLoad }: SeedCardProps) {
-  const diff = DIFFICULTY_STYLES[seed.difficulty];
+function SeedRow({ seed, card, loading, disabled, onLoad }: SeedRowProps) {
+  const difficulty = DIFFICULTY[seed.difficulty];
 
   return (
     <Tooltip text={seed.tooltipDescription} position="bottom" wide>
       <button
         onClick={onLoad}
         disabled={disabled}
-        className={`
-          w-full text-left
-          bg-gray-950/85
-          backdrop-blur-md border border-white/10 border-l-[3px] ${diff.bar}
-          rounded-2xl p-3.5 shadow-lg
-          transition-all duration-150
-          ${disabled
-            ? "opacity-60 cursor-not-allowed"
-            : "hover:bg-gray-950/95 hover:border-white/20 hover:-translate-y-0.5 cursor-pointer"
-          }
-        `}
+        className={`group w-full text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+          card
+            ? "rounded-2xl border border-line bg-surface/95 p-4 shadow-float backdrop-blur-xl"
+            : "px-1 py-4 hover:bg-surface-2/60"
+        }`}
       >
-        {/* Top row: difficulty + badges */}
-        <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-          <span className={`w-2 h-2 rounded-full shrink-0 ${diff.dot}`} />
-          <span className="text-xs text-white/70">{diff.label}</span>
-          <span className="ml-auto flex gap-1.5">
-            <span className="bg-white/15 text-white text-xs rounded-full px-2 py-0.5 whitespace-nowrap">
-              {seed.durationDays}d
-            </span>
-            <span className="bg-white/15 text-white text-xs rounded-full px-2 py-0.5 whitespace-nowrap">
-              ~{seed.distanceKm} km
-            </span>
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-xs font-medium text-ink-3">{seed.nameJa}</span>
+          <span className="num shrink-0 text-xs text-ink-3">
+            {seed.durationDays} days · ~{seed.distanceKm} km
           </span>
         </div>
-
-        {/* Route name */}
-        <p className="text-[15px] font-bold text-white leading-tight mb-1">
-          {seed.name}
-        </p>
-
-        {/* Tagline */}
-        <p className="text-[13px] text-white/80 line-clamp-2 leading-relaxed">
-          {seed.tagline}
-        </p>
-
-        {/* CTA */}
-        <div className="mt-2.5 flex items-center gap-1.5">
+        <p className="mt-0.5 text-[15px] font-semibold leading-snug text-ink">{seed.name}</p>
+        <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-ink-2">{seed.tagline}</p>
+        <div className="mt-2.5 flex items-center justify-between gap-3">
+          <span className="flex items-center gap-1.5 text-xs text-ink-3">
+            <span className={`h-2 w-2 rounded-full ${difficulty.dot}`} aria-hidden />
+            {difficulty.label}
+          </span>
           {loading ? (
-            <span className="text-xs text-white/50 flex items-center gap-1.5">
-              <svg className="animate-spin w-3 h-3 text-red-400" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
+            <span className="flex items-center gap-1.5 text-xs text-ink-3">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" aria-hidden />
               Planning route…
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-white bg-red-600 group-hover:bg-red-500 rounded-full px-2.5 py-1 transition-colors">
-              Plan this route →
+            <span className="text-[13px] font-medium text-accent group-hover:underline">
+              Plan this ride →
             </span>
           )}
         </div>

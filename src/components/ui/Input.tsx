@@ -8,39 +8,28 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   leftIcon?: React.ReactNode;
 }
 
+/** Shared field styling — 16px on phones so iOS doesn't zoom on focus. */
+export const fieldClass =
+  "w-full rounded-[10px] border border-line-strong bg-surface text-base md:text-sm text-ink placeholder:text-ink-3 px-3 py-2.5 transition-colors hover:border-ink-3 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25 disabled:bg-surface-2 disabled:cursor-not-allowed";
+
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, leftIcon, className = "", ...props }, ref) => {
     return (
-      <div className="flex flex-col gap-1 w-full">
-        {label && (
-          <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-            {label}
-          </label>
-        )}
+      <div className="flex flex-col gap-1.5 w-full">
+        {label && <label className="eyebrow text-ink-3">{label}</label>}
         <div className="relative">
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3">
               {leftIcon}
             </div>
           )}
           <input
             ref={ref}
-            className={`
-              w-full rounded-xl border border-gray-200 dark:border-gray-600
-              bg-white dark:bg-gray-800
-              px-3 py-2.5 text-sm
-              placeholder:text-gray-400 dark:placeholder:text-gray-500
-              text-gray-900 dark:text-white
-              focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent
-              disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:cursor-not-allowed
-              ${leftIcon ? "pl-9" : ""}
-              ${error ? "border-red-400 focus:ring-red-400" : ""}
-              ${className}
-            `}
+            className={`${fieldClass} ${leftIcon ? "pl-9" : ""} ${error ? "border-stop" : ""} ${className}`}
             {...props}
           />
         </div>
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p className="text-xs text-stop">{error}</p>}
       </div>
     );
   }

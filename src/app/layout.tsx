@@ -1,21 +1,25 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Instrument_Sans } from "next/font/google";
+import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
-// Single-family typography: Geist everywhere, hierarchy via weight and size
-const geist = Geist({ subsets: ["latin"] });
+// One typeface throughout; hierarchy comes from size, weight and case.
+const instrumentSans = Instrument_Sans({
+  subsets: ["latin"],
+  variable: "--font-latin",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Japan バイク Trip Planner",
+  title: `${BRAND.name} — ${BRAND.descriptor}`,
   description:
-    "Plan motorcycle trips through rural Japan — routes, weather, costs, and AI itineraries.",
+    "Plan a motorcycle ride in Japan: go or no-go for the day, arrival against sunset, fuel range, honest motorcycle tolls and seasonal road hazards.",
   icons: { icon: "/favicon.ico" },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -33,7 +37,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${geist.className} antialiased h-full`}>{children}</body>
+      <body className={`${instrumentSans.variable} font-sans antialiased h-full`}>{children}</body>
     </html>
   );
 }

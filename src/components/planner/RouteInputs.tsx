@@ -1,27 +1,34 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { MapPin, Navigation, Plus, X, Search, GripVertical } from "lucide-react";
+import { MapPin, Navigation, Plus, X, Route, GripVertical } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
 import { PlaceAutocompleteInput } from "@/components/ui/PlaceAutocompleteInput";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { planRoute } from "@/lib/routeApi";
 import { DayView } from "./DayView";
 
 export function RouteInputs() {
   const {
     itinerary,
+    isDayViewActive,
+    setDayViewActive,
     origin, destination, waypoints,
     setOrigin, setDestination, addWaypoint, removeWaypoint,
     setOriginCoords, setDestinationCoords, setWaypointCoords,
     setRoute, setCostBreakdown, setSuggestedBreaks, setLoadingRoute, clearRoute,
     reorderWaypoints,
+    isLoadingRoute,
+    route,
     settings,
   } = useTripStore();
 
   const [newWaypoint, setNewWaypoint] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Once a route exists the form collapses so the briefing stays in view
+  const [editing, setEditing] = useState(false);
 
   // Drag state
   const dragIndex = useRef<number | null>(null);
@@ -29,7 +36,7 @@ export function RouteInputs() {
 
   const handlePlanRoute = async () => {
     if (!origin.trim() || !destination.trim()) {
-      setError("Please enter both a start and destination.");
+      setError("Enter both a start and a destination to plan the route.");
       return;
     }
     setError(null);
@@ -40,10 +47,11 @@ export function RouteInputs() {
       waypoints,
       settings,
       onStart: () => setLoadingRoute(true),
-      onSuccess: (route, cost, breaks) => {
-        setRoute(route);
+      onSuccess: (planned, cost, breaks) => {
+        setRoute(planned);
         setCostBreakdown(cost);
         setSuggestedBreaks(breaks);
+        setEditing(false);
       },
       onError: (msg) => setError(msg),
       onFinally: () => setLoadingRoute(false),
@@ -55,6 +63,7 @@ export function RouteInputs() {
     setDestination("");
     clearRoute();
     setError(null);
+    setEditing(false);
   };
 
   // Drag handlers
@@ -87,64 +96,112 @@ export function RouteInputs() {
     setDragOverIndex(null);
   };
 
-  if (itinerary) {
-    return <DayView />;
+  if (itinerary && isDayViewActive) {
+    return (
+      <Card>
+        <DayView />
+      </Card>
+    );
+  }
+
+  if (route && !editing) {
+    return (
+      <div className="flex items-center justify-between gap-3 px-1">
+        <p className="eyebrow text-ink-3">
+          {itinerary ? (
+            <button
+              onClick={() => setDayViewActive(true)}
+              className="font-semibold text-accent hover:underline"
+            >
+              Back to {itinerary.length}-day itinerary
+            </button>
+          ) : (
+            "Route planned"
+          )}
+        </p>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+            Edit route
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleClear}>
+            Clear
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <SectionHeading>Route</SectionHeading>
+    <Card className="flex flex-col gap-4">
+      <SectionHeading
+        action={
+          route ? (
+            <button
+              onClick={() => setEditing(false)}
+              className="shrink-0 text-[13px] font-medium text-accent hover:underline"
+            >
+              Cancel
+            </button>
+          ) : undefined
+        }
+      >
+        Route
+      </SectionHeading>
 
       <PlaceAutocompleteInput
         label="Start"
-        placeholder="e.g. Matsumoto, Nagano"
+        placeholder="e.g. Ikebukuro, Tokyo"
         value={origin}
         onChange={setOrigin}
         onPlaceSelect={(name, coords) => {
           setOrigin(name);
           setOriginCoords(coords);
         }}
-        leftIcon={<Navigation className="w-4 h-4" />}
+        leftIcon={<Navigation className="h-4 w-4" />}
       />
 
       {/* Waypoints — draggable */}
-      {waypoints.map((wp, i) => (
-        <div
-          key={i}
-          draggable
-          onDragStart={() => handleDragStart(i)}
-          onDragOver={(e) => handleDragOver(e, i)}
-          onDrop={(e) => handleDrop(e, i)}
-          onDragEnd={handleDragEnd}
-          className={`flex items-center gap-2 rounded-lg transition-colors ${
-            dragOverIndex === i ? "bg-red-50 dark:bg-red-900/20" : ""
-          }`}
-        >
-          {/* Drag handle */}
-          <div className="text-gray-300 dark:text-gray-600 cursor-grab active:cursor-grabbing shrink-0 p-1">
-            <GripVertical className="w-4 h-4" />
-          </div>
-          <PlaceAutocompleteInput
-            placeholder={`Waypoint ${i + 1}`}
-            value={wp}
-            onChange={() => {}}
-            onPlaceSelect={(name, coords) => {
-              setWaypointCoords(i, coords);
-              removeWaypoint(i);
-              addWaypoint(name);
-            }}
-            leftIcon={<MapPin className="w-4 h-4" />}
-            className="flex-1"
-          />
-          <button
-            onClick={() => removeWaypoint(i)}
-            className="text-gray-400 hover:text-red-500 transition-colors p-1 shrink-0"
-            aria-label="Remove waypoint"
-          >
-            <X className="w-4 h-4" />
-          </button>
+      {waypoints.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <span className="eyebrow text-ink-3">Stops</span>
+          {waypoints.map((wp, i) => (
+            <div
+              key={i}
+              draggable
+              onDragStart={() => handleDragStart(i)}
+              onDragOver={(e) => handleDragOver(e, i)}
+              onDrop={(e) => handleDrop(e, i)}
+              onDragEnd={handleDragEnd}
+              className={`flex items-center gap-1 rounded-xl transition-colors ${
+                dragOverIndex === i ? "bg-accent-soft" : ""
+              }`}
+            >
+              <div className="shrink-0 cursor-grab p-1 text-ink-3 active:cursor-grabbing" aria-hidden>
+                <GripVertical className="h-4 w-4" />
+              </div>
+              <PlaceAutocompleteInput
+                placeholder={`Stop ${i + 1}`}
+                value={wp}
+                onChange={() => {}}
+                onPlaceSelect={(name, coords) => {
+                  setWaypointCoords(i, coords);
+                  removeWaypoint(i);
+                  addWaypoint(name);
+                }}
+                leftIcon={<MapPin className="h-4 w-4" />}
+                className="flex-1"
+              />
+              <button
+                onClick={() => removeWaypoint(i)}
+                className="shrink-0 rounded-lg p-2 text-ink-3 transition-colors hover:bg-surface-2 hover:text-stop"
+                aria-label={`Remove stop ${i + 1}`}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
 
       {/* Add waypoint — clears after selection, no double-add */}
       <div className="flex items-center gap-2">
@@ -156,7 +213,7 @@ export function RouteInputs() {
             addWaypoint(name);
             setNewWaypoint("");
           }}
-          leftIcon={<Plus className="w-4 h-4" />}
+          leftIcon={<Plus className="h-4 w-4" />}
           className="flex-1"
           clearAfterSelect
         />
@@ -166,7 +223,7 @@ export function RouteInputs() {
               addWaypoint(newWaypoint.trim());
               setNewWaypoint("");
             }}
-            className="text-red-600 hover:text-red-700 text-xs font-medium whitespace-nowrap"
+            className="whitespace-nowrap px-1 text-[13px] font-medium text-accent hover:underline"
           >
             Add
           </button>
@@ -175,29 +232,31 @@ export function RouteInputs() {
 
       <PlaceAutocompleteInput
         label="Destination"
-        placeholder="e.g. Kanazawa, Ishikawa"
+        placeholder="e.g. Nikko, Tochigi"
         value={destination}
         onChange={setDestination}
         onPlaceSelect={(name, coords) => {
           setDestination(name);
           setDestinationCoords(coords);
         }}
-        leftIcon={<MapPin className="w-4 h-4" />}
+        leftIcon={<MapPin className="h-4 w-4" />}
       />
 
       {error && (
-        <p className="text-xs text-red-600 bg-red-50 dark:bg-red-900/30 rounded-lg px-3 py-2">{error}</p>
+        <p role="alert" className="rounded-xl bg-stop-soft px-3.5 py-2.5 text-[13px] text-stop">
+          {error}
+        </p>
       )}
 
       <div className="flex gap-2">
-        <Button onClick={handlePlanRoute} className="flex-1" size="md">
-          <Search className="w-4 h-4" />
-          Plan Route
+        <Button onClick={handlePlanRoute} className="flex-1" loading={isLoadingRoute}>
+          <Route className="h-4 w-4" aria-hidden />
+          Plan route
         </Button>
-        <Button variant="secondary" onClick={handleClear} size="md">
-          <X className="w-4 h-4" />
+        <Button variant="secondary" onClick={handleClear} aria-label="Clear route">
+          <X className="h-4 w-4" aria-hidden />
         </Button>
       </div>
-    </div>
+    </Card>
   );
 }

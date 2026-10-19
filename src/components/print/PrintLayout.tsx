@@ -11,7 +11,8 @@
  * Rendered outside the sidebar so overflow-hidden never clips content.
  */
 
-import { formatDuration, formatJPY, calculateTripCostRange } from "@/lib/costCalc";
+import { formatDuration, formatJPY, calculateTripCostRange, describeTollAssumptions } from "@/lib/costCalc";
+import { BRAND } from "@/lib/brand";
 import type { ItineraryDay, TripSettings, CostBreakdown } from "@/types/trip";
 import type { SuggestedBreak } from "@/types/route";
 
@@ -26,11 +27,11 @@ export interface PrintData {
   generatedAt: string; // ISO string
 }
 
-const ACCOMMODATION_EMOJI: Record<string, string> = {
-  hotel: "🏨",
-  ryokan: "🎎",
-  guesthouse: "🏠",
-  camping: "⛺",
+const ACCOMMODATION_LABEL: Record<string, string> = {
+  hotel: "Hotel",
+  ryokan: "Ryokan",
+  guesthouse: "Guesthouse",
+  camping: "Camping",
 };
 
 const DIFFICULTY_LABEL: Record<string, string> = {
@@ -68,10 +69,10 @@ function CoverPage({ data }: { data: PrintData }) {
     <section className="print-page cover-page">
       {/* Header band */}
       <div className="cover-header">
-        <div className="cover-logo">🏍️</div>
+        <div className="cover-logo">{BRAND.kanji}</div>
         <div>
-          <h1 className="cover-title">Japan バイク Trip Planner</h1>
-          <p className="cover-subtitle">Motorcycle Road Trip Document</p>
+          <h1 className="cover-title">{BRAND.name} {BRAND.kanji}</h1>
+          <p className="cover-subtitle">Ride plan · {BRAND.japaneseDescriptor}</p>
         </div>
         <div className="cover-date">
           Generated {formatDate(data.generatedAt)}
@@ -129,21 +130,21 @@ function CoverPage({ data }: { data: PrintData }) {
             </thead>
             <tbody>
               <tr>
-                <td>⛽ Fuel</td>
+                <td>Fuel</td>
                 <td>{formatJPY(range.low.fuel)}</td>
                 <td>{formatJPY(range.high.fuel)}</td>
                 <td>{formatJPY(range.low.fuel * totalDays)}</td>
                 <td>{formatJPY(range.high.fuel * totalDays)}</td>
               </tr>
               <tr>
-                <td>🛣️ Tolls</td>
+                <td>Tolls (est.)</td>
                 <td>{formatJPY(range.low.tolls)}</td>
                 <td>{formatJPY(range.high.tolls)}</td>
                 <td>{formatJPY(range.low.tolls * totalDays)}</td>
                 <td>{formatJPY(range.high.tolls * totalDays)}</td>
               </tr>
               <tr>
-                <td>🏨 Accommodation</td>
+                <td>Accommodation</td>
                 <td>{formatJPY(range.low.accommodation)}</td>
                 <td>{formatJPY(range.high.accommodation)}</td>
                 <td>{formatJPY(range.low.accommodation * totalDays)}</td>
@@ -160,8 +161,8 @@ function CoverPage({ data }: { data: PrintData }) {
           </table>
           <p className="cost-note">
             * Fuel assumes {settings.fuelEfficiency} km/L at ¥{settings.fuelPricePerLiter}/L.
-            Tolls estimate ~40% expressway usage at {settings.bikeEngineCC >= 125 ? "¥27" : "¥15"}/km.
-            Costs in JPY.
+            Tolls: {describeTollAssumptions(settings)} — an estimate, not a quote; check NEXCO&apos;s toll
+            search for the exact figure. Costs in JPY.
           </p>
         </div>
       )}
@@ -210,7 +211,7 @@ function CoverPage({ data }: { data: PrintData }) {
                 <td className="num-cell">{day.distanceKm}</td>
                 <td className="num-cell">{formatDuration(day.ridingTimeMinutes)}</td>
                 <td>
-                  {ACCOMMODATION_EMOJI[day.accommodation.type] ?? "🏨"}{" "}
+                  {ACCOMMODATION_LABEL[day.accommodation.type] ?? "Stay"}{" "}
                   {day.accommodation.name}
                 </td>
               </tr>
@@ -258,7 +259,7 @@ function DayCard({ day, totalDays }: { day: ItineraryDay; totalDays: number }) {
       {/* Seasonal warning — prominent if present */}
       {day.seasonalWarning && (
         <div className="seasonal-warning">
-          <span className="warning-icon">⚠️</span>
+          <span className="warning-icon">!</span>
           <p>{day.seasonalWarning}</p>
         </div>
       )}
@@ -267,7 +268,7 @@ function DayCard({ day, totalDays }: { day: ItineraryDay; totalDays: number }) {
         {/* Key stops */}
         {day.keyStops.length > 0 && (
           <div className="day-section">
-            <h3 className="day-section-heading">📍 Key Stops</h3>
+            <h3 className="day-section-heading">Key stops</h3>
             <ul className="stops-list">
               {day.keyStops.map((stop, i) => (
                 <li key={i}>
@@ -282,7 +283,7 @@ function DayCard({ day, totalDays }: { day: ItineraryDay; totalDays: number }) {
         {/* Schedule */}
         {day.schedule && day.schedule.length > 0 && (
           <div className="day-section">
-            <h3 className="day-section-heading">🕐 Day Schedule</h3>
+            <h3 className="day-section-heading">Day schedule</h3>
             <table className="schedule-table">
               <tbody>
                 {day.schedule.map((item, i) => (
@@ -299,7 +300,7 @@ function DayCard({ day, totalDays }: { day: ItineraryDay; totalDays: number }) {
         {/* POIs / highlights */}
         {day.pois && day.pois.length > 0 && (
           <div className="day-section">
-            <h3 className="day-section-heading">🎯 Highlights & POIs</h3>
+            <h3 className="day-section-heading">Highlights</h3>
             <div className="pois-grid">
               {day.pois.map((poi, i) => (
                 <div key={i} className="poi-chip">{poi}</div>
@@ -311,18 +312,18 @@ function DayCard({ day, totalDays }: { day: ItineraryDay; totalDays: number }) {
         {/* Accommodation */}
         <div className="day-section accommodation-section">
           <h3 className="day-section-heading">
-            {ACCOMMODATION_EMOJI[day.accommodation.type] ?? "🏨"} Tonight&apos;s Stay
+            Tonight&apos;s stay · {ACCOMMODATION_LABEL[day.accommodation.type] ?? "Stay"}
           </h3>
           <div className="accommodation-card">
             <div className="accommodation-name">{day.accommodation.name}</div>
             <div className="accommodation-type">
               {day.accommodation.type.charAt(0).toUpperCase() + day.accommodation.type.slice(1)}
               {day.accommodation.hasMotorcycleParking && (
-                <span className="parking-badge">🏍️ Motorcycle parking</span>
+                <span className="parking-badge">Motorcycle parking</span>
               )}
             </div>
             {day.accommodation.parkingNote && (
-              <div className="parking-note">🅿️ {day.accommodation.parkingNote}</div>
+              <div className="parking-note">Parking: {day.accommodation.parkingNote}</div>
             )}
           </div>
         </div>
@@ -330,7 +331,7 @@ function DayCard({ day, totalDays }: { day: ItineraryDay; totalDays: number }) {
 
       {/* Day footer with page indicator */}
       <div className="day-footer">
-        Japan バイク Trip Planner · Day {day.day} of {totalDays}
+        {BRAND.name} {BRAND.kanji} · Day {day.day} of {totalDays}
       </div>
     </section>
   );
@@ -344,14 +345,14 @@ function TipsPage({ data }: { data: PrintData }) {
   return (
     <section className="print-page tips-page">
       <div className="tips-header">
-        <h2>🗾 Japan Riding — Practical Notes</h2>
+        <h2>Ride notes</h2>
       </div>
 
       <div className="tips-body">
         {/* Suggested breaks */}
         {suggestedBreaks.length > 0 && (
           <div className="tips-section">
-            <h3>☕ Suggested Rest Stops</h3>
+            <h3>Suggested rest stops</h3>
             <table className="breaks-table">
               <thead>
                 <tr>
@@ -375,31 +376,22 @@ function TipsPage({ data }: { data: PrintData }) {
           </div>
         )}
 
-        {/* Legal / safety */}
+        {/* On the road */}
         <div className="tips-section">
-          <h3>⚖️ Legal Requirements</h3>
+          <h3>On the road</h3>
           <ul className="tips-list">
-            <li><strong>International Driving Permit (IDP)</strong> — Required for foreign visitors. Must carry alongside your home licence. Geneva Convention IDP accepted; JAF issues IDPs in Japan.</li>
-            <li><strong>Helmets are mandatory</strong> — Required by law for all riders and pillion passengers. Full-face or open-face with visor recommended.</li>
-            <li><strong>Vehicle Registration</strong> — Carry the shakken (車検) certificate if riding a rental; rental shop usually provides it.</li>
-            <li><strong>Insurance</strong> — Confirm your rental includes third-party liability (jibaiseki hoken). Travel insurance rarely covers motorcycle accidents — get a specific rider.</li>
-          </ul>
-        </div>
-
-        {/* Fuel & costs */}
-        <div className="tips-section">
-          <h3>⛽ Fuel & Costs</h3>
-          <ul className="tips-list">
-            <li><strong>Fuel type:</strong> Use レギュラー (Regular 90 octane) for most bikes under 400cc. ハイオク (Premium) for larger litre-class bikes — check your rental paperwork.</li>
-            <li><strong>Your bike ({settings.bikeEngineCC}cc):</strong> Estimated {settings.fuelEfficiency} km/L at ¥{settings.fuelPricePerLiter}/L (regular). Fill up at Eneos, Idemitsu, or Shell stations.</li>
-            <li><strong>Expressway (高速道路):</strong> Bikes {settings.bikeEngineCC >= 125 ? "125cc+" : "under 125cc"} pay {settings.bikeEngineCC >= 125 ? "standard car rates (~¥27/km)" : "reduced rates (~¥15/km)"}. ETC card is optional but convenient — get a reader from the rental shop.</li>
-            <li><strong>Michi-no-Eki (道の駅):</strong> Roadside rest stations with free parking, toilets, local food, and often free Wi-Fi. Bikers&apos; favourite rest spots throughout Japan.</li>
+            <li><strong>Fuel range:</strong> Plan on {settings.fuelEfficiency} km/L at ¥{settings.fuelPricePerLiter}/L (regular, レギュラー). In the mountains, fill up whenever the tank is half empty — stations can be 40 km or more apart and many close by early evening.</li>
+            <li><strong>Expressways (高速道路):</strong> {describeTollAssumptions(settings)}. Bikes 126cc and up only; ETC is strongly recommended. Weekend ETC motorcycle discounts need advance registration.</li>
+            <li><strong>Michi-no-Eki (道の駅):</strong> Free parking, toilets and local food, and the usual place riders meet up for a break.</li>
+            <li><strong>Start early, finish before dark:</strong> Mountain roads are coldest at dawn and wildlife is most active at dawn and dusk.</li>
+            <li><strong>Wet and cold:</strong> Painted lines, manholes and bridge joints are slick in the rain. Shaded corners can stay icy well after sunrise from late autumn.</li>
+            <li><strong>Bears (クマ):</strong> Active May–July and October–December. Slow into blind corners and report any sighting at the next Michi-no-Eki.</li>
           </ul>
         </div>
 
         {/* Emergency contacts */}
         <div className="tips-section">
-          <h3>🆘 Emergency Numbers</h3>
+          <h3>Emergency numbers</h3>
           <table className="emergency-table">
             <tbody>
               <tr>
@@ -428,31 +420,31 @@ function TipsPage({ data }: { data: PrintData }) {
 
         {/* Seasonal notes */}
         <div className="tips-section">
-          <h3>🌸 Seasonal Notes</h3>
+          <h3>Seasonal notes</h3>
           <ul className="tips-list">
-            <li><strong>Spring (Mar–May):</strong> Cherry blossom season — beautiful but busy. Book accommodation 2–3 months ahead near popular spots.</li>
-            <li><strong>Summer (Jun–Aug):</strong> Rainy season June–mid-July. Hot and humid; hydrate frequently. Mountain roads offer cooler relief.</li>
-            <li><strong>Autumn (Sep–Nov):</strong> Best riding season. Clear skies, cool temperatures, autumn foliage (koyo) peaks Oct–Nov.</li>
-            <li><strong>Winter (Dec–Feb):</strong> Many mountain passes and toll roads close due to snow. Check JARTIC (jartic.or.jp) for road closures before riding.</li>
+            <li><strong>Spring (Mar–May):</strong> Sakura weekends clog the popular roads. Passes above 1,000 m often reopen late April to May — check before you commit.</li>
+            <li><strong>Summer (Jun–Aug):</strong> Rainy season runs to mid-July. Heat stroke is a real risk in the lowlands — drink before you are thirsty and climb to higher roads in the afternoon.</li>
+            <li><strong>Autumn (Sep–Nov):</strong> The best riding season, and the busiest on foliage (紅葉) roads. Leave early; high roads can be icy at dawn from late October.</li>
+            <li><strong>Winter (Dec–Mar):</strong> Many mountain passes close for the season. Check JARTIC (jartic.or.jp) and the prefectural road office before riding.</li>
           </ul>
         </div>
 
         {/* Useful apps */}
         <div className="tips-section">
-          <h3>📱 Useful Apps & Resources</h3>
+          <h3>Useful apps and sites</h3>
           <ul className="tips-list">
-            <li><strong>Google Maps</strong> — Works well in Japan; offline maps available for tunnels.</li>
+            <li><strong>Google Maps</strong> — Download the area for offline use before heading into mountain tunnels and valleys.</li>
             <li><strong>JARTIC (jartic.or.jp)</strong> — Real-time expressway traffic and road closure info in Japanese.</li>
-            <li><strong>Yahoo! カーナビ</strong> — Japan&apos;s best motorcycle-friendly navigation app with road closures.</li>
-            <li><strong>PayPay / IC Card</strong> — Contactless payment at most convenience stores, fuel stations, and toll booths.</li>
-            <li><strong>Google Translate (camera)</strong> — Point at Japanese signs, menus, road markings for instant translation.</li>
+            <li><strong>Yahoo! カーナビ</strong> — Navigation with live traffic and road-closure information in Japanese.</li>
+            <li><strong>PayPay / IC card</strong> — Accepted at most convenience stores and many fuel stations; carry some cash for small Michi-no-Eki and mountain huts.</li>
+            <li><strong>JMA rain radar (雨雲の動き)</strong> — Check the radar before you set off and at lunch; mountain showers move fast.</li>
           </ul>
         </div>
       </div>
 
       {/* Footer */}
       <div className="tips-footer">
-        Generated by Japan バイク Trip Planner · {formatDate(data.generatedAt)}
+        Generated by {BRAND.name} {BRAND.kanji} · {formatDate(data.generatedAt)}
       </div>
     </section>
   );
@@ -466,13 +458,13 @@ export function PrintLayout({ data }: { data: PrintData }) {
       {/* Screen-only toolbar (hidden during print) */}
       <div className="screen-toolbar">
         <div className="toolbar-inner">
-          <span className="toolbar-title">🏍️ Japan バイク Trip Planner — Print Preview</span>
+          <span className="toolbar-title">{BRAND.name} {BRAND.kanji} — Print preview</span>
           <div className="toolbar-actions">
             <button className="toolbar-btn-print" onClick={() => window.print()}>
-              🖨️ Print / Save PDF
+              Print / Save PDF
             </button>
             <button className="toolbar-btn-close" onClick={() => window.close()}>
-              ✕ Close
+              Close
             </button>
           </div>
         </div>

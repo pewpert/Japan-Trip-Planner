@@ -18,7 +18,7 @@ export function DayView() {
     setCostBreakdown,
     setSuggestedBreaks,
     setLoadingRoute,
-    setItinerary,
+    setDayViewActive,
     setRouteError,
     settings,
     isLoadingRoute,
@@ -59,33 +59,37 @@ export function DayView() {
   const goToPrev = () => { if (activeDay > 1) setActiveDay(activeDay - 1); };
   const goToNext = () => { if (activeDay < totalDays) setActiveDay(activeDay + 1); };
 
+  const stepClass =
+    "flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-30 disabled:hover:bg-transparent";
+
   return (
     <div className="flex flex-col gap-4">
-      {/* Header */}
       <SectionHeading
         action={
           <button
-            onClick={() => setItinerary(null)}
-            className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors shrink-0"
+            onClick={() => setDayViewActive(false)}
+            className="shrink-0 text-[13px] font-medium text-accent hover:underline"
           >
-            ✕ Exit day view
+            Plan another route
           </button>
         }
       >
-        Day View
+        Itinerary
       </SectionHeading>
 
       {/* Day pills */}
-      <div className="flex gap-1.5 flex-wrap">
+      <div role="tablist" aria-label="Itinerary days" className="flex flex-wrap gap-1.5">
         {itinerary.map((d) => (
           <button
             key={d.day}
+            role="tab"
+            aria-selected={activeDay === d.day}
             onClick={() => setActiveDay(d.day)}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150
-              ${activeDay === d.day
-                ? "bg-red-600 border-red-600 text-white"
-                : "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-red-400"
-              }`}
+            className={`num rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+              activeDay === d.day
+                ? "border-accent bg-accent text-on-accent"
+                : "border-line bg-surface text-ink-2 hover:border-line-strong"
+            }`}
           >
             Day {d.day}
           </button>
@@ -94,34 +98,24 @@ export function DayView() {
 
       {/* Prev / Next navigation */}
       <div className="flex items-center justify-between">
-        <button
-          onClick={goToPrev}
-          disabled={activeDay === 1}
-          className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" /> Prev
+        <button onClick={goToPrev} disabled={activeDay === 1} className={stepClass}>
+          <ChevronLeft className="h-4 w-4" aria-hidden /> Previous
         </button>
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+        <span className="num text-[13px] text-ink-3">
           {activeDay} of {totalDays}
         </span>
-        <button
-          onClick={goToNext}
-          disabled={activeDay === totalDays}
-          className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        >
-          Next <ChevronRight className="w-4 h-4" />
+        <button onClick={goToNext} disabled={activeDay === totalDays} className={stepClass}>
+          Next <ChevronRight className="h-4 w-4" aria-hidden />
         </button>
       </div>
 
-      {/* Day card */}
-      <div className="bg-gray-50 dark:bg-gray-700/40 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+      <div className="rounded-2xl border border-line bg-surface p-4">
         <DayDetailCard day={day} showRoute />
       </div>
 
-      {/* Loading indicator */}
       {isLoadingRoute && (
-        <p className="text-xs text-center text-gray-400 dark:text-gray-500 animate-pulse">
-          Loading day {activeDay} route…
+        <p role="status" className="animate-pulse text-center text-xs text-ink-3">
+          Loading the Day {activeDay} route…
         </p>
       )}
     </div>

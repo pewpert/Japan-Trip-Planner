@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { Autocomplete, useJsApiLoader } from "@react-google-maps/api";
+import { fieldClass } from "@/components/ui/Input";
 
 const LIBRARIES: ("places" | "geometry")[] = ["places", "geometry"];
 
@@ -71,23 +72,11 @@ export function PlaceAutocompleteInput({
     }
   };
 
-  const inputClass = `
-    w-full rounded-xl border border-gray-200 dark:border-gray-600
-    bg-white dark:bg-gray-800
-    py-2.5 text-sm
-    text-gray-900 dark:text-white
-    placeholder:text-gray-400 dark:placeholder:text-gray-500
-    focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent
-    ${leftIcon ? "pl-9 pr-3" : "px-3"}
-  `;
+  const inputClass = `${fieldClass} ${leftIcon ? "pl-9" : ""}`;
 
   return (
-    <div className={`flex flex-col gap-1 w-full ${className}`}>
-      {label && (
-        <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-          {label}
-        </label>
-      )}
+    <div className={`flex flex-col gap-1.5 w-full ${className}`}>
+      {label && <label className="eyebrow text-ink-3">{label}</label>}
       {isLoaded ? (
         <Autocomplete
           onLoad={onLoad}
@@ -99,7 +88,7 @@ export function PlaceAutocompleteInput({
         >
           <div className="relative">
             {leftIcon && (
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3 pointer-events-none">
                 {leftIcon}
               </div>
             )}
@@ -116,7 +105,7 @@ export function PlaceAutocompleteInput({
       ) : (
         <div className="relative">
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3 pointer-events-none">
               {leftIcon}
             </div>
           )}

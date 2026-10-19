@@ -2,38 +2,23 @@
 
 import { Marker } from "@react-google-maps/api";
 import { BIKER_POIS } from "@/data/bikerPOIs";
+import { POI_CATEGORY_BY_TYPE } from "@/data/poiCategories";
 import { useTripStore } from "@/hooks/useTripStore";
 
-const BIKER_POI_COLORS: Record<string, string> = {
-  "biker-cafe": "#ef4444",
-  "famous-road": "#f59e0b",
-  "michi-no-eki": "#10b981",
-  "bike-rental": "#3b82f6",
-  "scenic": "#8b5cf6",
-  "accommodation": "#f97316",
-};
+const FALLBACK_COLOR = "#64748B";
 
-const BIKER_POI_EMOJIS: Record<string, string> = {
-  "biker-cafe": "🏍",
-  "famous-road": "🏆",
-  "michi-no-eki": "🏪",
-  "bike-rental": "🔧",
-  "scenic": "🏔",
-  "accommodation": "🏨",
-};
-
-function makeSVGIcon(type: string, selected: boolean): string {
-  const color = BIKER_POI_COLORS[type] ?? "#6b7280";
-  const emoji = BIKER_POI_EMOJIS[type] ?? "📍";
-  const size = selected ? 40 : 34;
-  const r = size / 2 - 2;
-  const strokeWidth = selected ? "3" : "2";
+/** A flat dot with a white ring — quiet at country scale, still tappable. */
+function makeDotIcon(color: string, selected: boolean): { url: string; size: number } {
+  const size = selected ? 30 : 20;
+  const r = selected ? 10 : 6.5;
+  const ring = selected ? 3 : 2;
+  const c = size / 2;
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">` +
-    `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="${color}" stroke="#ffffff" stroke-width="${strokeWidth}"/>` +
-    `<text x="${size / 2}" y="${size / 2 + 5}" text-anchor="middle" font-size="14">${emoji}</text>` +
+    (selected ? `<circle cx="${c}" cy="${c}" r="${c - 0.5}" fill="${color}" fill-opacity="0.25"/>` : "") +
+    `<circle cx="${c}" cy="${c}" r="${r}" fill="${color}" stroke="#ffffff" stroke-width="${ring}"/>` +
     `</svg>`;
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  return { url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`, size };
 }
 
 export function BikerPOILayer() {
@@ -45,7 +30,8 @@ export function BikerPOILayer() {
     <>
       {filtered.map((poi) => {
         const isSelected = selectedBikerPOI?.id === poi.id;
-        const size = isSelected ? 40 : 34;
+        const color = POI_CATEGORY_BY_TYPE[poi.type]?.color ?? FALLBACK_COLOR;
+        const { url, size } = makeDotIcon(color, isSelected);
         return (
           <Marker
             key={poi.id}
@@ -53,7 +39,7 @@ export function BikerPOILayer() {
             title={poi.name}
             zIndex={isSelected ? 20 : 10}
             icon={{
-              url: makeSVGIcon(poi.type, isSelected),
+              url,
               scaledSize: new google.maps.Size(size, size),
               anchor: new google.maps.Point(size / 2, size / 2),
             }}

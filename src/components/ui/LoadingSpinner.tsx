@@ -6,16 +6,16 @@ interface LoadingSpinnerProps {
 export function LoadingSpinner({ size = "md", label }: LoadingSpinnerProps) {
   const sizes = {
     sm: "h-4 w-4 border-2",
-    md: "h-8 w-8 border-3",
-    lg: "h-12 w-12 border-4",
+    md: "h-7 w-7 border-2",
+    lg: "h-10 w-10 border-[3px]",
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-2">
+    <div className="flex flex-col items-center justify-center gap-2.5" role="status">
       <div
-        className={`${sizes[size]} rounded-full border-gray-200 border-t-red-600 animate-spin`}
+        className={`${sizes[size]} rounded-full border-line-strong border-t-accent animate-spin`}
       />
-      {label && <p className="text-sm text-gray-500">{label}</p>}
+      {label && <p className="text-sm text-ink-3">{label}</p>}
     </div>
   );
 }

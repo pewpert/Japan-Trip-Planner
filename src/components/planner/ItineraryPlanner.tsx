@@ -1,71 +1,34 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, ArrowLeft, Sparkles } from "lucide-react";
+import { MapPin, Sparkles } from "lucide-react";
 import { useTripStore } from "@/hooks/useTripStore";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { Tooltip } from "@/components/ui/Tooltip";
+import { Segmented } from "@/components/ui/Segmented";
+import { fieldClass } from "@/components/ui/Input";
 import { DayDetailCard } from "./DayDetailCard";
+import { canUseExpressways } from "@/lib/costCalc";
 import type { ItineraryDay } from "@/types/trip";
 
 type RidingStyle = "mountain passes" | "coastal roads" | "rural backroads";
 type Interest = "nature" | "history & temples" | "food" | "onsen" | "festivals";
 type Season = "spring" | "summer" | "autumn" | "winter";
+type TripShape = "round" | "oneway";
 
-const RIDING_STYLE_OPTIONS: { value: RidingStyle; label: string; emoji: string; tooltip: string }[] = [
-  {
-    value: "mountain passes",
-    label: "Mountain Passes",
-    emoji: "🏔️",
-    tooltip: "Winding roads through Japan's mountain ranges — expect hairpin turns and dramatic elevation changes",
-  },
-  {
-    value: "coastal roads",
-    label: "Coastal Roads",
-    emoji: "🌊",
-    tooltip: "Scenic routes along Japan's coastline — great ocean views with a mix of open straights and curves",
-  },
-  {
-    value: "rural backroads",
-    label: "Rural Backroads",
-    emoji: "🌾",
-    tooltip: "Quiet countryside roads through rice fields and small towns — the least-touristy riding experience",
-  },
+const RIDING_STYLE_OPTIONS: { value: RidingStyle; label: string }[] = [
+  { value: "mountain passes", label: "Mountain passes 峠" },
+  { value: "coastal roads", label: "Coastal roads 海沿い" },
+  { value: "rural backroads", label: "Rural backroads 田舎道" },
 ];
 
-const INTEREST_OPTIONS: { value: Interest; label: string; emoji: string; tooltip: string }[] = [
-  {
-    value: "nature",
-    label: "Nature",
-    emoji: "🌿",
-    tooltip: "Prioritises national parks, forests, mountain scenery and rural landscapes",
-  },
-  {
-    value: "history & temples",
-    label: "History & Temples",
-    emoji: "⛩️",
-    tooltip: "Routes past shrines, temples, castle towns and historic post towns",
-  },
-  {
-    value: "food",
-    label: "Food",
-    emoji: "🍜",
-    tooltip: "Includes stops at local restaurants, ramen shops, and regional specialties along the way",
-  },
-  {
-    value: "onsen",
-    label: "Onsen",
-    emoji: "♨️",
-    tooltip: "Suggests accommodation and stops near hot spring areas — great for end-of-day recovery",
-  },
-  {
-    value: "festivals",
-    label: "Festivals",
-    emoji: "🎌",
-    tooltip: "Highlights seasonal matsuri and local events happening along your route",
-  },
+const INTEREST_OPTIONS: { value: Interest; label: string }[] = [
+  { value: "nature", label: "Nature 自然" },
+  { value: "history & temples", label: "History & temples 歴史" },
+  { value: "food", label: "Local food グルメ" },
+  { value: "onsen", label: "Onsen 温泉" },
+  { value: "festivals", label: "Festivals 祭り" },
 ];
 
 const SEASON_OPTIONS: { value: Season; label: string }[] = [
@@ -75,35 +38,67 @@ const SEASON_OPTIONS: { value: Season; label: string }[] = [
   { value: "winter", label: "Winter (Dec–Feb)" },
 ];
 
+function currentSeason(): Season {
+  const month = new Date().getMonth() + 1;
+  if (month >= 3 && month <= 5) return "spring";
+  if (month >= 6 && month <= 8) return "summer";
+  if (month >= 9 && month <= 11) return "autumn";
+  return "winter";
+}
+
 interface ItineraryPlannerProps {
   onSwitchToRoute: () => void;
 }
 
+const labelClass = "eyebrow text-ink-3";
+
+function Chip({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+        selected
+          ? "border-accent bg-accent-soft text-accent"
+          : "border-line bg-surface text-ink-2 hover:border-line-strong"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
-  const { settings, updateSettings, setOrigin, setDestination, itinerary, setItinerary } = useTripStore();
+  const {
+    settings,
+    updateSettings,
+    setOrigin,
+    setDestination,
+    itinerary,
+    setItinerary,
+    setActiveDay,
+    setDayViewActive,
+  } = useTripStore();
 
   // Use string state so the field can be fully cleared before typing a new number
   const [days, setDays] = useState<string>("3");
+  const [startLocation, setStartLocation] = useState("");
+  const [tripShape, setTripShape] = useState<TripShape>("round");
   const [ridingStyles, setRidingStyles] = useState<RidingStyle[]>([]);
   const [interests, setInterests] = useState<Interest[]>([]);
-  const [season, setSeason] = useState<Season>("spring");
+  const [season, setSeason] = useState<Season>(currentSeason);
   const [regionsToInclude, setRegionsToInclude] = useState("");
   const [regionsToAvoid, setRegionsToAvoid] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Showing the form while an itinerary exists keeps the old one until a new one arrives
+  const [showForm, setShowForm] = useState(false);
 
-  const toggleRidingStyle = (style: RidingStyle) => {
-    setRidingStyles((prev) =>
-      prev.includes(style) ? prev.filter((s) => s !== style) : [...prev, style]
-    );
-  };
-
-  const toggleInterest = (interest: Interest) => {
-    setInterests((prev) =>
-      prev.includes(interest) ? prev.filter((i) => i !== interest) : [...prev, interest]
-    );
+  const toggle = <T extends string>(list: T[], value: T, set: (next: T[]) => void) => {
+    set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
   };
 
   const handleDaysBlur = () => {
@@ -121,10 +116,14 @@ export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           days: parseInt(days, 10) || 3,
+          startLocation: startLocation.trim() || undefined,
+          roundTrip: tripShape === "round",
           ridingStyles,
           interests,
           season,
           budget: settings.budget,
+          bikeEngineCC: settings.bikeEngineCC,
+          rangeKm: Math.round(settings.tankCapacityL * settings.fuelEfficiency),
           regionsToInclude,
           regionsToAvoid,
           additionalComments: additionalComments.trim() || undefined,
@@ -132,12 +131,13 @@ export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? "Failed to generate itinerary");
+        throw new Error(data.error ?? "Couldn't generate the itinerary. Try again.");
       }
       const data = await res.json();
       setItinerary(data.itinerary);
+      setShowForm(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
     } finally {
       setLoading(false);
     }
@@ -146,49 +146,46 @@ export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
   const handleLoadDay = (day: ItineraryDay) => {
     setOrigin(day.startLocation);
     setDestination(day.endLocation);
+    setActiveDay(day.day);
+    setDayViewActive(true);
     onSwitchToRoute();
   };
 
-  const inputClass =
-    "w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500";
-
-  if (itinerary) {
+  if (itinerary && !showForm) {
     return (
       <div className="flex flex-col gap-4">
-        <button
-          onClick={() => setItinerary(null)}
-          className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+        <SectionHeading
+          action={
+            <button
+              onClick={() => setShowForm(true)}
+              className="shrink-0 text-[13px] font-medium text-accent hover:underline"
+            >
+              Plan a new trip
+            </button>
+          }
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to form
-        </button>
-
-        <SectionHeading>Your {itinerary.length}-Day Itinerary</SectionHeading>
+          {itinerary.length}-day itinerary
+        </SectionHeading>
 
         {itinerary.map((day) => (
-          <Card key={day.day} padding="md">
+          <Card key={day.day}>
             <DayDetailCard day={day} showSchedule showAccommodationParking>
-              {/* POIs */}
               {day.pois.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Points of Interest</p>
-                  <ul className="flex flex-col gap-0.5">
+                  <p className="eyebrow mb-1.5 text-ink-3">Worth a stop</p>
+                  <ul className="flex flex-col gap-1">
                     {day.pois.map((poi, i) => (
-                      <li key={i} className="text-xs text-gray-600 dark:text-gray-400">• {poi}</li>
+                      <li key={i} className="text-[13px] leading-relaxed text-ink-2">
+                        {poi}
+                      </li>
                     ))}
                   </ul>
                 </div>
               )}
 
-              {/* Load into route planner */}
-              <Button
-                variant="secondary"
-                size="sm"
-                className="w-full mt-1"
-                onClick={() => handleLoadDay(day)}
-              >
-                <MapPin className="w-3 h-3" />
-                Load Day {day.day} into Route Planner
+              <Button variant="secondary" size="sm" className="w-full" onClick={() => handleLoadDay(day)}>
+                <MapPin className="h-3.5 w-3.5" aria-hidden />
+                Show Day {day.day} on the map
               </Button>
             </DayDetailCard>
           </Card>
@@ -197,175 +194,174 @@ export function ItineraryPlanner({ onSwitchToRoute }: ItineraryPlannerProps) {
     );
   }
 
+  const expressways = canUseExpressways(settings.bikeEngineCC);
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <SectionHeading>Plan Your Trip</SectionHeading>
-        <p className="text-xs text-gray-500 dark:text-gray-400">Tell us about your ideal journey and we&apos;ll build an itinerary</p>
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-2">
+        <SectionHeading
+          action={
+            itinerary ? (
+              <button
+                onClick={() => setShowForm(false)}
+                className="shrink-0 text-[13px] font-medium text-accent hover:underline"
+              >
+                Back to current trip
+              </button>
+            ) : undefined
+          }
+        >
+          Plan a trip
+        </SectionHeading>
+        <p className="text-[13px] leading-relaxed text-ink-3">
+          Tell us where you ride from and what you like. We&apos;ll build a day-by-day plan sized to
+          your bike&apos;s range
+          {expressways ? "" : " — kept off expressways, since your bike can't use them"}.
+        </p>
       </div>
 
-      {/* Days */}
-      <div className="flex flex-col gap-1">
-        <Tooltip text="How many days is your trip? Itinerary will be planned day-by-day (max 21)" wide>
-          <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide cursor-help">
-            Number of Days
-          </label>
-        </Tooltip>
+      <label className="flex flex-col gap-1.5">
+        <span className={labelClass}>Start from</span>
         <input
           type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          value={days}
-          onChange={(e) => setDays(e.target.value.replace(/[^0-9]/g, ""))}
-          onBlur={handleDaysBlur}
-          className={inputClass}
-          placeholder="3"
+          placeholder="e.g. Ikebukuro, Tokyo — leave blank to let us choose"
+          value={startLocation}
+          onChange={(e) => setStartLocation(e.target.value)}
+          className={fieldClass}
         />
+      </label>
+
+      <div className="grid grid-cols-[96px_1fr] gap-3">
+        <label className="flex flex-col gap-1.5">
+          <span className={labelClass}>Days</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={days}
+            onChange={(e) => setDays(e.target.value.replace(/[^0-9]/g, ""))}
+            onBlur={handleDaysBlur}
+            className={`${fieldClass} num`}
+            placeholder="3"
+          />
+        </label>
+        <div className="flex flex-col gap-1.5">
+          <span className={labelClass}>Shape</span>
+          <Segmented
+            ariaLabel="Trip shape"
+            value={tripShape}
+            onChange={setTripShape}
+            options={[
+              { value: "round", label: "Back to start" },
+              { value: "oneway", label: "One way" },
+            ]}
+          />
+        </div>
       </div>
 
-      {/* Riding style */}
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-          Riding Style
-        </label>
+        <span className={labelClass}>Riding style</span>
         <div className="flex flex-wrap gap-2">
           {RIDING_STYLE_OPTIONS.map((opt) => (
-            <Tooltip key={opt.value} text={opt.tooltip} wide>
-              <button
-                onClick={() => toggleRidingStyle(opt.value)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors
-                  ${ridingStyles.includes(opt.value)
-                    ? "bg-red-600 text-white border-red-600"
-                    : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-red-400"
-                  }`}
-              >
-                {opt.emoji} {opt.label}
-              </button>
-            </Tooltip>
+            <Chip
+              key={opt.value}
+              selected={ridingStyles.includes(opt.value)}
+              onClick={() => toggle(ridingStyles, opt.value, setRidingStyles)}
+            >
+              {opt.label}
+            </Chip>
           ))}
         </div>
       </div>
 
-      {/* Interests */}
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-          Interests
-        </label>
+        <span className={labelClass}>Interests</span>
         <div className="flex flex-wrap gap-2">
           {INTEREST_OPTIONS.map((opt) => (
-            <Tooltip key={opt.value} text={opt.tooltip} wide>
-              <button
-                onClick={() => toggleInterest(opt.value)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors
-                  ${interests.includes(opt.value)
-                    ? "bg-red-600 text-white border-red-600"
-                    : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-red-400"
-                  }`}
-              >
-                {opt.emoji} {opt.label}
-              </button>
-            </Tooltip>
+            <Chip
+              key={opt.value}
+              selected={interests.includes(opt.value)}
+              onClick={() => toggle(interests, opt.value, setInterests)}
+            >
+              {opt.label}
+            </Chip>
           ))}
         </div>
       </div>
 
-      {/* Season */}
-      <div className="flex flex-col gap-1">
-        <Tooltip text="Season affects road conditions, mountain pass closures, weather, and which festivals are active" wide>
-          <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide cursor-help">
-            Season
-          </label>
-        </Tooltip>
-        <select
-          value={season}
-          onChange={(e) => setSeason(e.target.value as Season)}
-          className={inputClass}
-        >
+      <label className="flex flex-col gap-1.5">
+        <span className={labelClass}>Season</span>
+        <select value={season} onChange={(e) => setSeason(e.target.value as Season)} className={fieldClass}>
           {SEASON_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
           ))}
         </select>
+        <span className="text-xs text-ink-3">
+          Season shapes pass closures, weather and which roads are worth riding.
+        </span>
+      </label>
+
+      <div className="grid grid-cols-2 gap-3">
+        <label className="flex flex-col gap-1.5">
+          <span className={labelClass}>Include</span>
+          <input
+            type="text"
+            placeholder="e.g. Tohoku, Shikoku"
+            value={regionsToInclude}
+            onChange={(e) => setRegionsToInclude(e.target.value)}
+            className={fieldClass}
+          />
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className={labelClass}>Avoid</span>
+          <input
+            type="text"
+            placeholder="e.g. Tokyo, Osaka"
+            value={regionsToAvoid}
+            onChange={(e) => setRegionsToAvoid(e.target.value)}
+            className={fieldClass}
+          />
+        </label>
       </div>
 
-      {/* Regions */}
-      <div className="flex flex-col gap-1">
-        <Tooltip text="Name specific prefectures or areas you definitely want to visit, e.g. 'Hokkaido, Nikko'" wide>
-          <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide cursor-help">
-            Regions to Include <span className="text-gray-400 normal-case font-normal">(optional)</span>
-          </label>
-        </Tooltip>
-        <input
-          type="text"
-          placeholder="e.g. Tohoku, Kyushu, Hokkaido"
-          value={regionsToInclude}
-          onChange={(e) => setRegionsToInclude(e.target.value)}
-          className={inputClass}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <Tooltip text="Areas to skip — useful if you've already ridden somewhere or want to avoid tourist-heavy zones" wide>
-          <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide cursor-help">
-            Regions to Avoid <span className="text-gray-400 normal-case font-normal">(optional)</span>
-          </label>
-        </Tooltip>
-        <input
-          type="text"
-          placeholder="e.g. Tokyo, Osaka"
-          value={regionsToAvoid}
-          onChange={(e) => setRegionsToAvoid(e.target.value)}
-          className={inputClass}
-        />
-      </div>
-
-      {/* Additional Comments */}
-      <div className="flex flex-col gap-1">
-        <Tooltip text="Add special needs — e.g. travelling with a pillion, avoiding highways, looking for biker cafes, accessibility requirements" wide>
-          <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide cursor-help">
-            Additional Comments <span className="text-gray-400 normal-case font-normal">(optional)</span>
-          </label>
-        </Tooltip>
+      <label className="flex flex-col gap-1.5">
+        <span className={labelClass}>Anything else</span>
         <textarea
           rows={3}
-          placeholder="e.g. I'm travelling with a pillion, prefer coastal roads, interested in biker cafes..."
+          placeholder="e.g. riding two-up, prefer twisties over expressways, want a rider-friendly inn each night"
           value={additionalComments}
           onChange={(e) => setAdditionalComments(e.target.value)}
-          className={`${inputClass} resize-none`}
+          className={`${fieldClass} resize-none`}
         />
-      </div>
+      </label>
 
-      {/* Budget — inline editable, synced with Trip Settings */}
-      <div className="flex flex-col gap-1">
-        <Tooltip text="Affects accommodation suggestions in the itinerary. Also syncs with Route Planner → Trip Settings" wide>
-          <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide cursor-help">
-            Accommodation Budget
-          </label>
-        </Tooltip>
+      <label className="flex flex-col gap-1.5">
+        <span className={labelClass}>Lodging budget</span>
         <select
           value={settings.budget}
           onChange={(e) => updateSettings({ budget: e.target.value as "budget" | "mid" | "luxury" })}
-          className={inputClass}
+          className={fieldClass}
         >
-          <option value="budget">Budget (hostels, ~¥3,500/night)</option>
-          <option value="mid">Mid-range (business hotel, ~¥8,000/night)</option>
-          <option value="luxury">Luxury (ryokan, ~¥20,000/night)</option>
+          <option value="budget">Budget — hostel or guesthouse, ~¥3,500/night</option>
+          <option value="mid">Mid-range — business hotel, ~¥8,000/night</option>
+          <option value="luxury">Luxury — ryokan, ~¥20,000+/night</option>
         </select>
-      </div>
+      </label>
 
       {error && (
-        <p className="text-xs text-red-600 bg-red-50 dark:bg-red-900/30 rounded-lg px-3 py-2">{error}</p>
+        <p role="alert" className="rounded-xl bg-stop-soft px-3.5 py-2.5 text-[13px] text-stop">
+          {error}
+        </p>
       )}
 
-      <Tooltip text="Uses AI to build a day-by-day motorcycle itinerary based on your preferences" wide position="top">
-        <Button onClick={handleGenerate} loading={loading} size="md" className="w-full">
-          <Sparkles className="w-4 h-4" />
-          {loading ? "Generating itinerary..." : "Generate Itinerary"}
-        </Button>
-      </Tooltip>
+      <Button onClick={handleGenerate} loading={loading} size="md" className="w-full">
+        <Sparkles className="h-4 w-4" aria-hidden />
+        {loading ? "Building your itinerary…" : "Generate itinerary"}
+      </Button>
 
-      <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
-        Powered by Claude AI · Takes ~10 seconds
-      </p>
+      <p className="text-center text-xs text-ink-3">Powered by Claude · takes about ten seconds</p>
     </div>
   );
 }
