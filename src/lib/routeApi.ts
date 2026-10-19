@@ -1,7 +1,7 @@
 import type { RouteResult } from "@/types/route";
 import type { TripSettings, CostBreakdown } from "@/types/trip";
 import type { SuggestedBreak } from "@/types/route";
-import { calculateTripCost } from "@/lib/costCalc";
+import { calculateTripCost, shouldAvoidExpressways } from "@/lib/costCalc";
 import { computeSuggestedBreaks } from "@/lib/breakInterpolation";
 
 interface PlanRouteParams {
@@ -30,7 +30,12 @@ export async function planRoute({
     const res = await fetch("/api/route", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ origin, destination, waypoints }),
+      body: JSON.stringify({
+        origin,
+        destination,
+        waypoints,
+        avoidHighways: shouldAvoidExpressways(settings),
+      }),
     });
 
     if (!res.ok) {

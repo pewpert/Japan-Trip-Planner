@@ -1,15 +1,25 @@
 import type { RouteResult, SuggestedBreak } from "@/types/route";
 import type { CostBreakdown, ItineraryDay } from "@/types/trip";
 import { formatDuration } from "@/lib/costCalc";
+import { BRAND } from "@/lib/brand";
 
 function formatJPYPlain(amount: number): string {
   return `¥${amount.toLocaleString("ja-JP")}`;
 }
 
-function padRight(str: string, len: number): string {
-  return str.padEnd(len, " ");
+/** The ride-day details worth sharing alongside the route. */
+export interface BriefingExport {
+  dayLabel: string; // "Sat 24 Oct"
+  departure: string; // "07:00"
+  arrival: string; // "13:15"
+  sunset: string | null;
+  verdict: string | null; // "Good to ride"
+  fuelRangeKm: number;
+  fuelStops: number;
+  notes: string[]; // advisory titles
 }
 
+/** Plain-text summary — pastes cleanly into LINE, Slack or email. */
 export function buildTripSummaryText(params: {
   origin: string;
   destination: string;
@@ -18,78 +28,75 @@ export function buildTripSummaryText(params: {
   costBreakdown: CostBreakdown;
   suggestedBreaks: SuggestedBreak[];
   itinerary?: ItineraryDay[];
+  briefing?: BriefingExport;
 }): string {
-  const { origin, destination, waypoints, route, costBreakdown, suggestedBreaks, itinerary } = params;
+  const { origin, destination, waypoints, route, costBreakdown, suggestedBreaks, itinerary, briefing } =
+    params;
 
   const lines: string[] = [];
 
-  lines.push("🏍️ Japan バイク Trip Planner — Trip Summary");
-  lines.push("==========================================");
+  lines.push(`${BRAND.name} ${BRAND.kanji} — ride plan`);
   lines.push("");
 
-  // ROUTE
-  lines.push("ROUTE");
-  lines.push(`${padRight("Start:", 13)}${origin}`);
-  lines.push(`${padRight("Destination:", 13)}${destination}`);
+  lines.push(`${origin} → ${destination}`);
   if (waypoints.length > 0) {
-    lines.push(`${padRight("Stops:", 13)}${waypoints.join(" → ")}`);
+    lines.push(`via ${waypoints.join(" → ")}`);
   }
-  lines.push(`${padRight("Distance:", 13)}${route.distanceKm.toFixed(0)} km`);
-  lines.push(`${padRight("Riding time:", 13)}${formatDuration(route.durationMinutes)}`);
+  lines.push(`${route.distanceKm.toFixed(0)} km · ${formatDuration(route.durationMinutes)} riding`);
+
+  if (briefing) {
+    lines.push("");
+    lines.push(`${briefing.dayLabel}${briefing.verdict ? ` — ${briefing.verdict}` : ""}`);
+    lines.push(
+      `Depart ${briefing.departure} · arrive ${briefing.arrival}` +
+        (briefing.sunset ? ` · sunset ${briefing.sunset}` : "")
+    );
+    lines.push(
+      `Tank range ~${briefing.fuelRangeKm} km` +
+        (briefing.fuelStops > 0
+          ? ` · ${briefing.fuelStops} fuel stop${briefing.fuelStops > 1 ? "s" : ""} planned`
+          : " · no fuel stop needed")
+    );
+    if (briefing.notes.length > 0) {
+      lines.push("");
+      lines.push("Heads-up:");
+      briefing.notes.forEach((note) => lines.push(`- ${note}`));
+    }
+  }
+
+  lines.push("");
   lines.push(
-    `${padRight("Breaks:", 13)}${
-      suggestedBreaks.length === 0
-        ? "None needed"
-        : `${suggestedBreaks.length} suggested stop${suggestedBreaks.length > 1 ? "s" : ""}`
-    }`
+    `Estimated cost: fuel ${formatJPYPlain(costBreakdown.fuel)} + tolls ${formatJPYPlain(costBreakdown.tolls)}` +
+      ` = ${formatJPYPlain(costBreakdown.fuel + costBreakdown.tolls)}`
   );
-  lines.push("");
 
-  // COST ESTIMATE
-  lines.push("COST ESTIMATE");
-  lines.push(`${padRight("Fuel:", 15)}${formatJPYPlain(costBreakdown.fuel)}`);
-  lines.push(`${padRight("Tolls:", 15)}${formatJPYPlain(costBreakdown.tolls)}`);
-  lines.push(`${padRight("Accommodation:", 15)}${formatJPYPlain(costBreakdown.accommodation)}`);
-  lines.push(`${padRight("Total:", 15)}${formatJPYPlain(costBreakdown.total)}`);
-  lines.push("");
-
-  // SUGGESTED BREAKS
   if (suggestedBreaks.length > 0) {
-    lines.push("SUGGESTED BREAKS");
+    lines.push("");
+    lines.push("Breaks:");
     suggestedBreaks.forEach((brk, i) => {
       lines.push(
-        `☕ Break ${i + 1} — after ${formatDuration(brk.timeIntoRideMinutes)} (${brk.distanceIntoRouteKm} km in)`
+        `${i + 1}. after ${formatDuration(brk.timeIntoRideMinutes)} (${brk.distanceIntoRouteKm} km in)`
       );
-      lines.push(`   ${brk.note}`);
     });
-    lines.push("");
   }
 
-  // ITINERARY
   if (itinerary && itinerary.length > 0) {
-    lines.push("ITINERARY");
+    lines.push("");
+    lines.push("Itinerary:");
     itinerary.forEach((day) => {
+      lines.push(`Day ${day.day} — ${day.title}`);
       lines.push(
-        `Day ${day.day} — ${day.title}`
-      );
-      lines.push(
-        `  Route: ${day.startLocation} → ${day.endLocation} | ${day.distanceKm} km | ${formatDuration(day.ridingTimeMinutes)}`
+        `  ${day.startLocation} → ${day.endLocation} · ${day.distanceKm} km · ${formatDuration(day.ridingTimeMinutes)}`
       );
       if (day.keyStops.length > 0) {
         lines.push(`  Stops: ${day.keyStops.join(", ")}`);
       }
-      lines.push(
-        `  Stay:  ${day.accommodation.name} (${day.accommodation.type})`
-      );
+      lines.push(`  Stay: ${day.accommodation.name} (${day.accommodation.type})`);
       if (day.seasonalWarning) {
-        lines.push(`  ⚠️  ${day.seasonalWarning}`);
+        lines.push(`  Note: ${day.seasonalWarning}`);
       }
-      lines.push("");
     });
   }
-
-  lines.push("--");
-  lines.push("Generated by Japan バイク Trip Planner");
 
   return lines.join("\n");
 }

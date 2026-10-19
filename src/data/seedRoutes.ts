@@ -1,6 +1,7 @@
 export interface SeedRoute {
   id: string;
   name: string;
+  nameJa: string;
   durationDays: number;
   distanceKm: number;
   tagline: string;
@@ -16,6 +17,7 @@ export const SEED_ROUTES: SeedRoute[] = [
   {
     id: "nikko-oku-nikko",
     name: "Nikko & Oku-Nikko Ridge",
+    nameJa: "日光・奥日光",
     durationDays: 3,
     distanceKm: 490,
     difficulty: "intermediate",
@@ -30,13 +32,14 @@ export const SEED_ROUTES: SeedRoute[] = [
   {
     id: "izu-peninsula",
     name: "Izu Peninsula Loop",
+    nameJa: "伊豆半島",
     durationDays: 3,
     distanceKm: 380,
     difficulty: "beginner",
     region: "kanto",
     tagline: "Coastal curves, volcanic scenery & fresh seafood",
     tooltipDescription:
-      "A beginner-friendly loop south-west of Tokyo along the Izu coastline. Highlights include Atami, Ito, the rugged west coast road to Shimoda, and volcanic interior scenery. Good roads, great seafood, and manageable daily distances — perfect for a first Japan ride.",
+      "A beginner-friendly loop south-west of Tokyo along the Izu coastline. Highlights include Atami, Ito, the rugged west coast road to Shimoda, and volcanic interior scenery. Good roads, great seafood, and manageable daily distances — an easy first long ride from the Tokyo side.",
     origin: "Mishima, Shizuoka",
     destination: "Mishima, Shizuoka",
     waypoints: ["Atami, Shizuoka", "Shimoda, Shizuoka", "Dogashima, Shizuoka"],
@@ -44,6 +47,7 @@ export const SEED_ROUTES: SeedRoute[] = [
   {
     id: "japanese-alps",
     name: "Japanese Alps Crossing",
+    nameJa: "日本アルプス横断",
     durationDays: 5,
     distanceKm: 750,
     difficulty: "advanced",
@@ -58,6 +62,7 @@ export const SEED_ROUTES: SeedRoute[] = [
   {
     id: "kyushu-aso",
     name: "Kyushu Aso Caldera Loop",
+    nameJa: "阿蘇カルデラ",
     durationDays: 4,
     distanceKm: 600,
     difficulty: "intermediate",

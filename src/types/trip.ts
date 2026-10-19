@@ -1,10 +1,16 @@
 export type TripMode = "motorcycle" | "car" | "hiking" | "train";
 
+/** How much of the route the rider expects to spend on expressways (高速道路). */
+export type RoadMix = "backroads" | "mixed" | "expressway";
+
 export interface TripSettings {
   mode: TripMode;
   fuelEfficiency: number; // km per liter
   fuelPricePerLiter: number; // JPY
-  bikeEngineCC: number; // engine size, affects toll category
+  bikeEngineCC: number; // engine size — 125cc and under may not use expressways
+  tankCapacityL: number; // fuel tank capacity in liters
+  roadMix: RoadMix; // expressway share; "backroads" also asks Google to avoid highways
+  etcWeekendDiscount: boolean; // rider is registered for NEXCO's weekend 二輪車定率割引
   budget: "budget" | "mid" | "luxury";
 }
 

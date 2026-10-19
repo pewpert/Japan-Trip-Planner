@@ -6,11 +6,11 @@ const MAX_BREAKS = 4;
 function buildBreakNote(distanceKm: number, totalKm: number): string {
   const fraction = distanceKm / totalKm;
   if (fraction < 0.25) {
-    return "Early rest stop — good point to refuel and stretch before the road ahead";
+    return "Early stop — stretch, check the bike over, and top up if the tank is under half.";
   } else if (fraction < 0.6) {
-    return "Midpoint break — look for a Michi-no-Eki (道の駅) for food, coffee, and rest facilities";
+    return "Midpoint — a 道の駅 is the classic stop: food, toilets and local produce.";
   } else {
-    return "Late-ride rest — convenience stores (コンビニ) are plentiful on most Japanese roads";
+    return "Late stop — shake out your hands and shoulders; fatigue builds in the last third.";
   }
 }
 

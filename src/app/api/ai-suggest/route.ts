@@ -6,11 +6,17 @@ import { getRelevantPOIs } from "@/lib/poiFilter";
 const VALID_SEASONS = ["spring", "summer", "autumn", "winter"] as const;
 const VALID_BUDGETS = ["budget", "mid", "luxury"] as const;
 
-const SYSTEM_PROMPT = `You are an expert motorcycle trip planner for Japan, specialising in rural and regional routes away from major cities like Tokyo, Osaka, and Kyoto.
+const SYSTEM_PROMPT = `You are an expert touring planner for motorcyclists who live in Japan. The rider is a local: fluent in Japanese culture and road rules, reading this in English. Never explain basics a resident already knows (licences, helmets, how ETC or konbini work) and never write for a tourist.
 
-You plan safe, enjoyable itineraries that respect seasonal road conditions, Japanese traffic laws, and local culture.
-Focus on scenic backroads, mountain passes, coastal highways, and authentic rural Japan experiences.
-Always include practical motorcycle-specific notes (parking, road conditions, seasonal closures).
+Plan like an experienced Japanese touring rider:
+- Rural and regional roads, passes (峠), coastal routes and quiet backroads over big-city centres (Tokyo, Osaka, Kyoto).
+- Build days around the rider's range and the real world of fuel: stations in rural areas are closing, so place a fuel stop before long mountain or coastal stretches and never plan more than ~80% of the stated tank range between stops.
+- Use 道の駅 and well-known SA/PA for meals and breaks, and finish most days early enough to reach the inn and soak in an onsen before dark. Avoid riding mountain roads after sunset.
+- Respect the calendar: high passes close for winter (around November to April), bears are most active at dawn and dusk (especially October to December in Tohoku), and altitude is much colder than the valley. Put these in seasonalWarning.
+- Keep daily riding to a realistic 5–7 hours including stops. Prefer rider-friendly lodging with covered or lockable motorcycle parking, and say so in parkingNote.
+- Add practical local touches — good regional lunches, day-use onsen, a viewpoint that riders actually stop at.
+- Where the rider's bike is 125cc or smaller, use no expressways at all.
+- Use Japanese names with romaji where helpful, e.g. "Venus Line (ビーナスライン)".
 
 When curated POI data is provided in the user message, prefer those verified real locations over inventing new ones.
 Use curated POIs as anchors for your itinerary — build riding days around them. Only invent accommodation names when no curated option fits.
@@ -55,6 +61,10 @@ export async function POST(req: NextRequest) {
       regionsToInclude,
       regionsToAvoid,
       additionalComments,
+      startLocation,
+      roundTrip,
+      bikeEngineCC,
+      rangeKm,
     } = body;
 
     // Input validation
@@ -71,6 +81,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Additional comments must be under 1000 characters" }, { status: 400 });
     }
 
+    // Normalised rider context (all optional)
+    const start: string =
+      typeof startLocation === "string" ? startLocation.trim().slice(0, 120) : "";
+    const returnToStart = roundTrip === true;
+    const cc: number | null = typeof bikeEngineCC === "number" ? bikeEngineCC : null;
+    const tankRangeKm: number | null =
+      typeof rangeKm === "number" && rangeKm > 0 && rangeKm < 2000 ? Math.round(rangeKm) : null;
+
     // -------------------------------------------------------------------------
     // MOCK MODE — set ANTHROPIC_MOCK=true in .env.local to skip API calls
     // (checked before the API key so mock mode works without a live key)
@@ -80,8 +98,8 @@ export async function POST(req: NextRequest) {
       const mockItinerary: ItineraryDay[] = Array.from({ length: days }, (_, i) => ({
         day: i + 1,
         title: `Day ${i + 1} — Sample Riding Day (Mock)`,
-        startLocation: i === 0 ? "Matsumoto, Nagano" : `Town ${i}`,
-        endLocation: i === days - 1 ? "Kanazawa, Ishikawa" : `Town ${i + 1}`,
+        startLocation: i === 0 ? start || "Matsumoto, Nagano" : `Town ${i}`,
+        endLocation: i === days - 1 ? (returnToStart && start ? start : "Kanazawa, Ishikawa") : `Town ${i + 1}`,
         distanceKm: 120 + i * 20,
         ridingTimeMinutes: 180 + i * 15,
         keyStops: ["Norikura Skyline", "Takayama Old Town", "Shirakawa-go"],
@@ -139,8 +157,22 @@ export async function POST(req: NextRequest) {
         ? `\n\nRider's special requests: ${additionalComments.trim()}`
         : "";
 
-    const userMessage = `Plan a ${days}-day motorcycle trip in Japan.
+    const bikeLine =
+      cc === null
+        ? ""
+        : cc <= 125
+          ? "\nBike: 125cc or smaller — expressways are not allowed, so plan national routes and prefectural roads only."
+          : `\nBike: roughly ${cc >= 750 ? "401cc or larger" : cc >= 400 ? "251–400cc" : "126–250cc"}, expressways allowed.`;
+    const rangeLine = tankRangeKm
+      ? `\nTank range: about ${tankRangeKm} km on a full tank — keep fuel stops within ${Math.round(tankRangeKm * 0.8)} km of each other.`
+      : "";
+    const startLine = start
+      ? `The rider starts from ${start}${returnToStart ? " and wants to return there at the end (a loop)" : " and finishes somewhere new (one way)"}.`
+      : "No start location was given — choose a sensible starting point in a region that suits the preferences.";
 
+    const userMessage = `Plan a ${days}-day motorcycle trip in Japan for a local rider.
+
+${startLine}${bikeLine}${rangeLine}
 Riding style preference: ${Array.isArray(ridingStyles) && ridingStyles.length > 0 ? ridingStyles.join(", ") : "no strong preference"}.
 Interests: ${Array.isArray(interests) && interests.length > 0 ? interests.join(", ") : "general sightseeing"}.
 Season: ${season}.
@@ -148,9 +180,7 @@ Budget: ${budgetDescriptions[budget as keyof typeof budgetDescriptions]}.
 Regions to include: ${regionsToInclude?.trim() || "no preference — suggest the best for the preferences above"}.
 Regions to avoid: ${regionsToAvoid?.trim() || "none specified"}.
 
-Always avoid major city centers (Tokyo, Osaka, Kyoto) unless they are unavoidable transit points.
-Choose routes that reward motorcycle riding — twisty mountain roads, scenic coastal stretches, and quiet rural roads.
-Start from a practical gateway city that has good transport links (shinkansen or airport) for arriving foreign visitors.${commentsSection}${poisContext}`;
+Choose routes that reward motorcycle riding — twisty mountain roads, scenic coastal stretches, and quiet rural roads — and avoid big-city centres unless they are unavoidable.${commentsSection}${poisContext}`;
 
     const client = new Anthropic({ apiKey });
 

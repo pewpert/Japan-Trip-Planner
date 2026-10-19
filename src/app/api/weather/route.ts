@@ -28,6 +28,7 @@ interface OpenMeteoCurrentWeather {
 interface OpenMeteoResponse {
   latitude: number;
   longitude: number;
+  elevation?: number; // meters above sea level
   current_weather: OpenMeteoCurrentWeather;
   daily: OpenMeteoDaily;
 }
@@ -117,6 +118,7 @@ export async function POST(req: NextRequest) {
       return {
         coordinates: { lat: point.lat, lng: point.lng },
         locationName: point.name ?? `Point ${i + 1}`,
+        elevationM: typeof result.elevation === "number" ? result.elevation : undefined,
         current,
         forecast,
       };

@@ -33,6 +33,13 @@ interface TripStore {
   routeError: string | null;
   setRouteError: (error: string | null) => void;
 
+  // When the rider plans to go: which day (0 = today … 6) and what time they leave.
+  // The day selects which forecast is shown; the time drives arrival vs sunset.
+  rideDayOffset: number;
+  setRideDayOffset: (offset: number) => void;
+  departureTime: string; // "HH:MM", JST
+  setDepartureTime: (time: string) => void;
+
   // Suggested breaks (computed from route, session-only)
   suggestedBreaks: SuggestedBreak[];
   setSuggestedBreaks: (breaks: SuggestedBreak[]) => void;
@@ -74,6 +81,10 @@ interface TripStore {
   // AI Itinerary (persisted)
   itinerary: ItineraryDay[] | null;
   setItinerary: (itinerary: ItineraryDay[] | null) => void;
+  // Whether the Plan tab shows the itinerary's day-by-day view instead of the
+  // free route inputs. Leaving it keeps the itinerary; session-only.
+  isDayViewActive: boolean;
+  setDayViewActive: (active: boolean) => void;
   activeDay: number; // 1-based
   setActiveDay: (day: number) => void;
 }
@@ -83,8 +94,21 @@ const defaultSettings: TripSettings = {
   fuelEfficiency: 22, // km/L — conservative estimate for mid-size bike
   fuelPricePerLiter: 175, // JPY — approximate Japan average
   bikeEngineCC: 400,
+  tankCapacityL: 14, // typical for a 400–750cc touring bike
+  roadMix: "mixed",
+  etcWeekendDiscount: false, // only on if the rider has registered with NEXCO
   budget: "mid",
 };
+
+/**
+ * Settings saved before a field existed come back without it. Fill the gaps
+ * from the defaults, and map the old "under 125cc" choice (50) onto 125.
+ */
+function migrateSettings(saved: Partial<TripSettings> | undefined): TripSettings {
+  const merged: TripSettings = { ...defaultSettings, ...saved };
+  if (merged.bikeEngineCC <= 125) merged.bikeEngineCC = 125;
+  return merged;
+}
 
 export const useTripStore = create<TripStore>()(
   persist(
@@ -104,12 +128,15 @@ export const useTripStore = create<TripStore>()(
       isSidebarOpen: true,
       isDarkMode: false,
       routeError: null,
+      rideDayOffset: 0,
+      departureTime: "08:00",
       suggestedBreaks: [],
       settings: defaultSettings,
       savedItineraries: [],
       activeBikerCategories: ["biker-cafe", "famous-road", "michi-no-eki", "bike-rental", "scenic", "accommodation"],
       selectedBikerPOI: null,
       itinerary: null,
+      isDayViewActive: true,
       activeDay: 1,
 
       setOrigin: (origin) => set({ origin }),
@@ -133,6 +160,8 @@ export const useTripStore = create<TripStore>()(
       setLoadingRoute: (isLoadingRoute) => set({ isLoadingRoute }),
       setLoadingWeather: (isLoadingWeather) => set({ isLoadingWeather }),
       setRouteError: (routeError) => set({ routeError }),
+      setRideDayOffset: (rideDayOffset) => set({ rideDayOffset }),
+      setDepartureTime: (departureTime) => set({ departureTime }),
       toggleSidebar: () =>
         set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
       setSuggestedBreaks: (suggestedBreaks) => set({ suggestedBreaks }),
@@ -211,7 +240,8 @@ export const useTripStore = create<TripStore>()(
       })),
       setSelectedBikerPOI: (selectedBikerPOI) => set({ selectedBikerPOI }),
 
-      setItinerary: (itinerary) => set({ itinerary, activeDay: 1 }),
+      setItinerary: (itinerary) => set({ itinerary, activeDay: 1, isDayViewActive: true }),
+      setDayViewActive: (isDayViewActive) => set({ isDayViewActive }),
       setActiveDay: (activeDay) => set({ activeDay }),
     }),
     {
@@ -222,7 +252,12 @@ export const useTripStore = create<TripStore>()(
         isDarkMode: state.isDarkMode,
         activeBikerCategories: state.activeBikerCategories,
         itinerary: state.itinerary,
+        departureTime: state.departureTime,
       }),
+      merge: (persisted, current) => {
+        const saved = (persisted ?? {}) as Partial<TripStore>;
+        return { ...current, ...saved, settings: migrateSettings(saved.settings) };
+      },
     }
   )
 );

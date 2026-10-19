@@ -3,7 +3,7 @@ import type { RouteResult } from "@/types/route";
 
 export async function POST(req: NextRequest) {
   try {
-    const { origin, destination, waypoints = [] } = await req.json();
+    const { origin, destination, waypoints = [], avoidHighways = false } = await req.json();
 
     if (!origin || !destination) {
       return NextResponse.json(
@@ -31,6 +31,8 @@ export async function POST(req: NextRequest) {
       `?origin=${encodeURIComponent(origin)}` +
       `&destination=${encodeURIComponent(destination)}` +
       `${waypointsParam}` +
+      // Bikes of 125cc and under (and riders who prefer back roads) stay off expressways
+      `${avoidHighways === true ? "&avoid=highways" : ""}` +
       `&region=jp` +
       `&language=en` +
       `&key=${apiKey}`;
